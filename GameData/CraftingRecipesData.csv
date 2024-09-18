@@ -1,0 +1,15 @@
+﻿InputItemUniqueName,InputQuantity,ToolUniqueName,OutputItemUniqueName,OutputQuantity,GenerationDuration
+mining_copper,1,mining_furnace,mining_copper_ore,1,1
+mining_iron,1,mining_furnace,mining_iron_ore,1,2
+mining_silver,1,mining_furnace,mining_silver_ore,1,4
+mining_oil,2,mining_furnace,mining_silver_ore,1,4
+mining_gold,1,mining_furnace,mining_gold_ore,1,8
+mining_oil,10,mining_furnace,mining_gold_ore,1,8
+farming_moonberry_seed,1,player_ultimate,farming_lunar_berries,5,60
+farming_sungrain_seed,1,player_ultimate,farming_golden_sheaf,5,120
+farming_firleaf_seed,1,player_ultimate,farming_blazebloom,3,300
+farming_aquasprout_seed,1,player_ultimate,farming_tidefruits,10,600
+farming_nightshade_seed,1,player_ultimate,farming_midnight_petals,1,3600
+woodcutting_oak_tree,1,woodcutting_axe,woodcutting_oak_logs,30,1
+woodcutting_pine_tree,1,woodcutting_axe,woodcutting_pine_logs,20,2
+woodcutting_maple_tree,1,woodcutting_axe,woodcutting_maple_logs,15,5
