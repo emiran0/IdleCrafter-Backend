@@ -1,5 +1,5 @@
 ﻿UniqueName,Name,Category,GoldValue,Probability,isLegendary,isCraftable,ItemDescription
-mining_stone,Stone,Mining,1,0.5,False,False,Commonly found in the ground, boring stone we know.
+mining_stone,Stone,Mining,1,0.5,False,False,Commonly found in the ground-boring stone we know.
 mining_copper,Copper,Mining,4,0.25,False,False,The classic metal, used for many things.
 mining_iron,Iron,Mining,10,0.1,False,False,The most common metal, used for many things.
 mining_silver,Silver,Mining,20,0.01,False,False,The metal of the moon, used for many things.
@@ -22,7 +22,7 @@ farming_tidefruits,Tidefruits,Farming,0.0,,False,True,Used for special things.
 farming_midnight_petals,Midnight Petals,Farming,,1.0,False,True,Used for special things.
 woodcutting_oak_tree,Oak Tree,Woodcutting,0.0,0.1,False,False,A common tree, used for many things.
 woodcutting_pine_tree,Pine Tree,Woodcutting,0.0,0.05,False,False,A tree which grows in colder climates, used for many things.
-woodcutting_maple_tree,Maple Tree,Woodcutting,0.0,0.005,False,False,A tree which grows in colder climates, used for many things.
+woodcutting_maple_tree,Maple Tree,Woodcutting,0.0,0.005,False,False,A tree which grows in colder climates-used for many things.
 woodcutting_oak_logs,Oak Logs,Woodcutting,10,1.0,False,True,Used for many things.
 woodcutting_pine_logs,Pine Logs,Woodcutting,30,1.0,False,True,Used for many things.
 woodcutting_maple_logs,Maple Logs,Woodcutting,100,1.0,False,True,Used for many things.
