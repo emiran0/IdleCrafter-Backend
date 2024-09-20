@@ -20,7 +20,7 @@ farming_golden_sheaf,Golden Sheaf,Farming,0.0,1.0,False,True,Used for special th
 farming_blazeboom,Blazeboom,Farming,0.0,1.0,False,True,Used for special things.
 farming_tidefruits,Tidefruits,Farming,0.0,,False,True,Used for special things.
 farming_midnight_petals,Midnight Petals,Farming,,1.0,False,True,Used for special things.
-woodcutting_oak_tree,Oak Tree,Woodcutting,0.0,0.1,False,False,A common tree, used for many things.
+woodcutting_oak_tree,Oak Tree,Woodcutting,0.0,0.1,False,False,A common tree-used for many things.
 woodcutting_pine_tree,Pine Tree,Woodcutting,0.0,0.05,False,False,A tree which grows in colder climates-used for many things.
 woodcutting_maple_tree,Maple Tree,Woodcutting,0.0,0.005,False,False,A tree which grows in colder climates-used for many things.
 woodcutting_oak_logs,Oak Logs,Woodcutting,10,1.0,False,True,Used for many things.
