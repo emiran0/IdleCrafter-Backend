@@ -1,15 +1,15 @@
 ﻿UniqueName,Name,Category,GoldValue,Probability,isLegendary,isCraftable,ItemDescription
 mining_stone,Stone,Mining,1,0.5,False,False,Commonly found in the ground-boring stone we know.
-mining_copper,Copper,Mining,4,0.25,False,False,The classic metal, used for many things.
-mining_iron,Iron,Mining,10,0.1,False,False,The most common metal, used for many things.
-mining_silver,Silver,Mining,20,0.01,False,False,The metal of the moon, used for many things.
-mining_gold,Gold,Mining,50,0.005,False,False,The metal of the sun, used for many things.
-mining_emerald,Emerald,Mining,2000,0.0005,True,False,A rare gemstone, used for special things.
+mining_copper,Copper,Mining,4,0.25,False,False,The classic metal-used for many things.
+mining_iron,Iron,Mining,10,0.1,False,False,The most common metal-used for many things.
+mining_silver,Silver,Mining,20,0.01,False,False,The metal of the moon-used for many things.
+mining_gold,Gold,Mining,50,0.005,False,False,The metal of the sun-used for many things.
+mining_emerald,Emerald,Mining,2000,0.0005,True,False,A rare gemstone-used for special things.
 mining_copper_ore,Copper Ore,Mining,8,1.0,False,True,Smelted into copper.
 mining_iron_ore,Iron Ore,Mining,20,1.0,False,True,Smelted into iron.
 mining_silver_ore,Silver Ore,Mining,50,1.0,False,True,Smelted into silver.
 mining_gold_ore,Gold Ore,Mining,150,1.0,False,True,Smelted into gold.
-mining_oil,Oil,Mining,0.0,1.0,False,False,Black gold, used for many things.
+mining_oil,Oil,Mining,0.0,1.0,False,False,Black gold-used for many things.
 farming_moonberry_seed,Moonberry Seed,Farming,0.0,0.8,False,False, A seed which commonly can be found.
 farming_sungrain_seed,Sungrain Seed,Farming,0.0,0.4,False,False,A seed which ocassionally can be found.
 farming_fireleaf_seed,Fireleaf Seed,Farming,0.0,0.1,False,False,A seed which rarely can be found.
@@ -21,7 +21,7 @@ farming_blazeboom,Blazeboom,Farming,0.0,1.0,False,True,Used for special things.
 farming_tidefruits,Tidefruits,Farming,0.0,,False,True,Used for special things.
 farming_midnight_petals,Midnight Petals,Farming,,1.0,False,True,Used for special things.
 woodcutting_oak_tree,Oak Tree,Woodcutting,0.0,0.1,False,False,A common tree, used for many things.
-woodcutting_pine_tree,Pine Tree,Woodcutting,0.0,0.05,False,False,A tree which grows in colder climates, used for many things.
+woodcutting_pine_tree,Pine Tree,Woodcutting,0.0,0.05,False,False,A tree which grows in colder climates-used for many things.
 woodcutting_maple_tree,Maple Tree,Woodcutting,0.0,0.005,False,False,A tree which grows in colder climates-used for many things.
 woodcutting_oak_logs,Oak Logs,Woodcutting,10,1.0,False,True,Used for many things.
 woodcutting_pine_logs,Pine Logs,Woodcutting,30,1.0,False,True,Used for many things.
