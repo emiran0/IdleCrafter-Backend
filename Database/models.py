@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, Integer, String, ForeignKey, Float, DateTime, Boolean, ARRAY
+    Column, Integer, String, ForeignKey, Float, DateTime, Boolean
 )
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import relationship
@@ -62,7 +62,6 @@ class ToolGeneratableItem(Base):
     Id = Column(Integer, primary_key=True, index=True)
     ToolUniqueName = Column(String, ForeignKey('tools.UniqueName', ondelete='CASCADE'), nullable=False)   # Tool that can generate the item
     ItemUniqueName = Column(String, ForeignKey('items.UniqueName', ondelete='CASCADE'), nullable=False)   # Item that can be generated
-    # Probability field removed
 
     # Relationships
     tool = relationship('Tool', back_populates='generatable_items')
@@ -83,14 +82,15 @@ class CraftingRecipe(Base):
     input_item = relationship('Item', foreign_keys=[InputItemUniqueName])
     output_item = relationship('Item', foreign_keys=[OutputItemUniqueName])
     tool = relationship('Tool', foreign_keys=[ToolUniqueName], back_populates='recipes')
+
 class UserItem(Base):
     __tablename__ = 'user_items'
 
     Id = Column(Integer, primary_key=True, index=True)
     UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
-    ItemId = Column(Integer, ForeignKey('items.Id'), nullable=False, unique=True)    # Item that the user has
-    UniqueName = Column(String, nullable=True)   # Unique name of the item
-    Quantity = Column(Integer, default=0)   # Quantity of the item that the user has with the specific item.
+    Username = Column(String, nullable=False)   # Username of the user
+    UniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)   # Unique name of the item
+    Quantity = Column(Integer, default=0)   # Quantity of the item that the user has
 
     # Relationships
     user = relationship('User', back_populates='items')
@@ -101,12 +101,15 @@ class UserTool(Base):
 
     Id = Column(Integer, primary_key=True, index=True)
     UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)   # User that has the tool
-    ToolId = Column(Integer, ForeignKey('tools.Id'), nullable=False, unique=True)   # Tool that the user has
+    Username = Column(String, nullable=False)   # Username of the user
+    ToolUniqueName = Column(String, ForeignKey('tools.UniqueName'), nullable=False)   # Tool that the user has
     Tier = Column(Integer, default=1)   # Tier of the tool
     AcquiredAt = Column(DateTime, default=datetime.now(), nullable=True)   # When the user acquired the tool
-    isEnabled = Column(Boolean, default=True, nullable=True)    # Whether the tool is
+    isEnabled = Column(Boolean, default=True, nullable=True)    # Whether the tool is enabled
     isOccupied = Column(Boolean, default=False)    # Whether the tool is currently occupied
-    LastUsed = Column(DateTime, default=None, nullable=True)    # When the user last used the tool, only if it is not repeating.
+    LastUsed = Column(DateTime, default=None, nullable=True)    # When the user last used the tool, only if it is not repeating
+    OngoingCraftingItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=True)  # The item currently being crafted
+    OngoingRemainedQuantity = Column(Integer, nullable=True)   # The remaining quantity to be crafted
 
     # Relationships
     user = relationship('User', back_populates='tools')
