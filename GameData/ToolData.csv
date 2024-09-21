@@ -1,6 +1,6 @@
 ﻿UniqueName,Name,Category,isRepeating,ProbabilityBoost,ToolDescription
 player_ultimate,Player Ultimate,All,True,1,The ultimate tool THE PLAYER HIMSELF used for everything.
-mining_pickaxe,Pickaxe,Mining,True,1,The classic mining tool, used for many things.
+mining_pickaxe,Pickaxe,Mining,True,1,The classic mining tool-used for many things.
 mining_furnace,Furnace,Mining,False,1,Used to smelt ores into metals.
 mining_oil_extractor,Oil Extractor,Mining,True,1,Used to extract oil from the ground.
 mining_oil_silo,Oil Silo,Mining,False,1,Used to store oil.
