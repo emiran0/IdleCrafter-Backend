@@ -8,21 +8,47 @@ from sqlalchemy.exc import IntegrityError
 def create_tool_generatable_item(data):
     db = SessionLocal()
     try:
-        # Check if Tool and Item exist
+        # Check if Tool exists
         tool = db.query(Tool).filter(Tool.UniqueName == data['ToolUniqueName']).first()
         if not tool:
             print(f"Tool '{data['ToolUniqueName']}' not found.")
             return
 
+        # Check if Item exists
         item = db.query(Item).filter(Item.UniqueName == data['ItemUniqueName']).first()
         if not item:
             print(f"Item '{data['ItemUniqueName']}' not found.")
             return
 
+        # Get ResourceUniqueName (set to None if empty or not provided)
+        resource_unique_name = data.get('ResourceUniqueName')
+        if resource_unique_name == '':
+            resource_unique_name = None
+
+        # Get ResourceQuantity (set to None if empty or not provided)
+        resource_quantity = data.get('ResourceQuantity')
+        if resource_quantity == '':
+            resource_quantity = None
+        else:
+            resource_quantity = int(resource_quantity)
+
+        # If ResourceUniqueName is provided, check if it exists
+        if resource_unique_name:
+            resource_item = db.query(Item).filter(Item.UniqueName == resource_unique_name).first()
+            if not resource_item:
+                print(f"Resource Item '{resource_unique_name}' not found.")
+                return
+
+        # Parse OutputItemQuantity
+        output_item_quantity = int(data['OutputItemQuantity']) if data.get('OutputItemQuantity') else 1
+
         # Create the ToolGeneratableItem object
         new_tgi = ToolGeneratableItem(
             ToolUniqueName=data['ToolUniqueName'],
-            ItemUniqueName=data['ItemUniqueName']
+            ItemUniqueName=data['ItemUniqueName'],
+            ResourceUniqueName=resource_unique_name,
+            ResourceQuantity=resource_quantity,
+            OutputItemQuantity=output_item_quantity
         )
 
         db.add(new_tgi)

@@ -27,18 +27,28 @@ class Item(Base):
     __tablename__ = 'items'
 
     Id = Column(Integer, primary_key=True, index=True)
-    UniqueName = Column(String, unique=True)  # Unique name for the item
-    Name = Column(String, nullable=False)     # Display name for the item
-    Category = Column(String, nullable=False) # Category of the item
-    GoldValue = Column(Float, default=0.0, nullable=True)    # Gold value of the item
-    Probability = Column(Float, default=1.0, nullable=True)  # Probability of getting the item
-    isLegendary = Column(Boolean, default=False)    # Whether the item is legendary
-    isCraftable = Column(Boolean, default=False, nullable=True)    # Whether the item is acquired by crafting
-    ItemDescription = Column(String, nullable=True)   # Description of the item
+    UniqueName = Column(String, unique=True)
+    Name = Column(String, nullable=False)
+    Category = Column(String, nullable=False)
+    GoldValue = Column(Float, default=0.0, nullable=True)
+    Probability = Column(Float, default=1.0, nullable=True)
+    isLegendary = Column(Boolean, default=False)
+    isCraftable = Column(Boolean, default=False, nullable=True)
+    ItemDescription = Column(String, nullable=True)
 
     # Relationships
     user_items = relationship('UserItem', back_populates='item')
-    generated_by_tools = relationship('ToolGeneratableItem', back_populates='item')
+    generated_by_tools = relationship(
+        'ToolGeneratableItem',
+        back_populates='generated_item',
+        foreign_keys='ToolGeneratableItem.ItemUniqueName',
+        cascade='all, delete-orphan'
+    )
+    tools_requiring_this_item = relationship(
+        'ToolGeneratableItem',
+        back_populates='resource_item',
+        foreign_keys='ToolGeneratableItem.ResourceUniqueName',
+    )
 
 class Tool(Base):
     __tablename__ = 'tools'
@@ -50,6 +60,7 @@ class Tool(Base):
     isRepeating = Column(Boolean, default=False, nullable=True) # Whether the tool is repeating
     ProbabilityBoost = Column(Float, default=1.0, nullable=True)   # Boost to the probability of generating items
     ToolDescription = Column(String, nullable=True) # Description of the tool
+    StorageCapacity = Column(Integer, nullable=True)   # Storage capacity of the tool
 
     # Relationships
     user_tools = relationship('UserTool', back_populates='tool')
@@ -60,12 +71,16 @@ class ToolGeneratableItem(Base):
     __tablename__ = 'tool_generatable_items'
 
     Id = Column(Integer, primary_key=True, index=True)
-    ToolUniqueName = Column(String, ForeignKey('tools.UniqueName', ondelete='CASCADE'), nullable=False)   # Tool that can generate the item
-    ItemUniqueName = Column(String, ForeignKey('items.UniqueName', ondelete='CASCADE'), nullable=False)   # Item that can be generated
+    ToolUniqueName = Column(String, ForeignKey('tools.UniqueName', ondelete='CASCADE'), nullable=False)
+    ItemUniqueName = Column(String, ForeignKey('items.UniqueName', ondelete='CASCADE'), nullable=False)
+    ResourceUniqueName = Column(String, ForeignKey('items.UniqueName', ondelete='CASCADE'), nullable=True)
+    ResourceQuantity = Column(Integer, nullable=True)
+    OutputItemQuantity = Column(Integer, nullable=False, default=1)
 
     # Relationships
     tool = relationship('Tool', back_populates='generatable_items')
-    item = relationship('Item', back_populates='generated_by_tools')
+    generated_item = relationship('Item', foreign_keys=[ItemUniqueName], back_populates='generated_by_tools')
+    resource_item = relationship('Item', foreign_keys=[ResourceUniqueName], back_populates='tools_requiring_this_item')
 
 class CraftingRecipe(Base):
     __tablename__ = 'crafting_recipes'
@@ -82,7 +97,18 @@ class CraftingRecipe(Base):
     input_item = relationship('Item', foreign_keys=[InputItemUniqueName])
     output_item = relationship('Item', foreign_keys=[OutputItemUniqueName])
     tool = relationship('Tool', foreign_keys=[ToolUniqueName], back_populates='recipes')
+class ToolCraftingRecipe(Base):
+    __tablename__ = 'tool_crafting_recipes'
 
+    Id = Column(Integer, primary_key=True, index=True)
+    InputItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)
+    InputQuantity = Column(Integer, nullable=False)
+    OutputToolUniqueName = Column(String, ForeignKey('tools.UniqueName'), nullable=False)
+    GenerationDuration = Column(Float, default=1.0)  # Duration in seconds to craft the tool
+
+    # Relationships
+    input_item = relationship('Item', foreign_keys=[InputItemUniqueName])
+    output_tool = relationship('Tool', foreign_keys=[OutputToolUniqueName])
 class UserItem(Base):
     __tablename__ = 'user_items'
 

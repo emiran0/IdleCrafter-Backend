@@ -8,14 +8,24 @@ from sqlalchemy.exc import IntegrityError
 def create_tool(tool_data):
     db = SessionLocal()
     try:
+        # Parse boolean fields
+        is_repeating = tool_data.get('isRepeating', '').strip().lower() == 'true'
+
+        # Parse float fields
+        probability_boost = float(tool_data['ProbabilityBoost']) if tool_data.get('ProbabilityBoost') else 1.0
+
+        # Parse integer fields
+        storage_capacity = int(tool_data['StorageCapacity']) if tool_data.get('StorageCapacity') else None
+
         # Create the Tool object
         new_tool = Tool(
             UniqueName=tool_data['UniqueName'],
             Name=tool_data['Name'],
             Category=tool_data['Category'],
-            isRepeating=tool_data.get('isRepeating', '').strip().lower() == 'true',
-            ProbabilityBoost=float(tool_data['ProbabilityBoost']) if tool_data.get('ProbabilityBoost') else None,
-            ToolDescription=tool_data.get('ToolDescription')
+            isRepeating=is_repeating,
+            ProbabilityBoost=probability_boost,
+            ToolDescription=tool_data.get('ToolDescription'),
+            StorageCapacity=storage_capacity
         )
 
         db.add(new_tool)

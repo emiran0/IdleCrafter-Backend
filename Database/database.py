@@ -2,23 +2,24 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-DB_URL = os.getenv("DB_URL")
 
-# For PostgreSQL, it would be something like:
-DATABASE_URL = DB_URL
+DATABASE_URL = os.getenv("DB_URL")
+ASYNC_DATABASE_URL = os.getenv("ASYNC_DB_URL")
 
-# Create the engine
-engine = create_engine(
-    DATABASE_URL,
-    # connect_args={"check_same_thread": False}  # Only needed for SQLite
-)
+# Synchronous Engine and Session
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-# Create a configured "Session" class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Asynchronous Engine and Session
+async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
+AsyncSessionLocal = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
-# Create a Base class for your models to inherit
 Base = declarative_base()
+
+
+
