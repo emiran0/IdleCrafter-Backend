@@ -2,7 +2,7 @@
 
 import time
 from Database.database import SessionLocal
-from Database.models import UserTool, Tool, ToolGeneratableItem, Item, UserItem
+from Database.models import UserTool, Tool, ToolGeneratableItem, Item, UserItem, User
 from sqlalchemy.orm import joinedload
 import random
 
@@ -10,9 +10,11 @@ def process_repeating_tools():
     db = SessionLocal()
     try:
         user_tools = db.query(UserTool).join(Tool).options(
-            joinedload(UserTool.tool).joinedload(Tool.generatable_items).joinedload(ToolGeneratableItem.item),
-            joinedload(UserTool.user),
-            joinedload(UserTool.tool)
+            # Update the relationship to 'generated_item'
+            joinedload(UserTool.tool).joinedload(Tool.generatable_items).joinedload(ToolGeneratableItem.generated_item),
+            # Ensure user and user's items are loaded
+            joinedload(UserTool.user).joinedload(User.items),
+            # Remove redundant joinedload(UserTool.tool)
         ).filter(
             Tool.isRepeating == True,
             UserTool.isEnabled == True
@@ -26,14 +28,12 @@ def process_repeating_tools():
 
             # Get the user's item quantities
             user_items_dict = {ui.UniqueName: ui for ui in user.items}
-            print(user_items_dict)
-            print(len(user_items_dict))
 
             # Check for storage capacity
             storage_capacity = tool.StorageCapacity
 
             for gen_item_assoc in tool.generatable_items:
-                item = gen_item_assoc.item
+                item = gen_item_assoc.generated_item  # Updated attribute access
                 output_item_quantity = gen_item_assoc.OutputItemQuantity or 1
 
                 # Resource requirement (if any)

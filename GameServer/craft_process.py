@@ -74,10 +74,8 @@ async def craft_item(user_identifier: str, output_item_unique_name: str, quantit
             for entry in recipe_entries:
                 input_item_name = entry.InputItemUniqueName
                 total_quantity_needed = entry.InputQuantity * quantity
-                if input_item_name in total_input_requirements:
-                    total_input_requirements[input_item_name] += total_quantity_needed
-                else:
-                    total_input_requirements[input_item_name] = total_quantity_needed
+                
+                total_input_requirements[input_item_name] = total_quantity_needed
 
             # Step 5: Check if the user has enough input items
             user_items_dict = {ui.UniqueName: ui for ui in user.items}
@@ -130,8 +128,8 @@ async def craft_item(user_identifier: str, output_item_unique_name: str, quantit
 async def main():
     result = await craft_item(
         user_identifier='efe_latrak',
-        output_item_unique_name='mining_copper_ore',
-        quantity=100
+        output_item_unique_name='mining_iron_ore',
+        quantity=300
     )
     print(result)
 
