@@ -10,7 +10,7 @@ from Database.models import (
 )
 from Database.database import AsyncSessionLocal
 
-async def process_ongoing_crafting():
+async def crafting_ongoing_process():
     async with AsyncSessionLocal() as session:
         try:
             # Step 1: Fetch all occupied UserTools
@@ -76,7 +76,6 @@ async def process_ongoing_crafting():
                             Quantity=crafted_quantity
                         )
                         session.add(user_item)
-
                     # Step 4: Update UserTool
                     user_tool.OngoingRemainedQuantity -= crafted_quantity
 
@@ -104,10 +103,10 @@ async def process_ongoing_crafting():
             print(f"Error processing ongoing crafting: {e}")
 
 
-async def schedule_crafting_processing(interval_seconds: int):
-    while True:
-        await process_ongoing_crafting()
-        await asyncio.sleep(interval_seconds)
+# async def schedule_crafting_processing(interval_seconds: int):
+#     while True:
+#         await process_ongoing_crafting()
+#         await asyncio.sleep(interval_seconds)
 
-if __name__ == "__main__":
-    asyncio.run(schedule_crafting_processing(5))  # Run every 60 seconds
+# if __name__ == "__main__":
+#     asyncio.run(schedule_crafting_processing(5))  # Run every 60 seconds

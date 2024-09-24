@@ -88,10 +88,10 @@ def process_repeating_tools():
     finally:
         db.close()
 
-def run_repeating_tools():
-    while True:
-        process_repeating_tools()
-        time.sleep(5)  # Wait for 5 seconds
+# def run_repeating_tools():
+#     while True:
+#         process_repeating_tools()
+#         time.sleep(5)  # Wait for 5 seconds
 
-if __name__ == "__main__":
-    run_repeating_tools()
+# if __name__ == "__main__":
+#     run_repeating_tools()

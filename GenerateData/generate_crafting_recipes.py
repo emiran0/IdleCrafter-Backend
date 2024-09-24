@@ -62,3 +62,5 @@ def create_crafting_recipes_from_csv(csv_filename):
 if __name__ == "__main__":
     csv_file_path = 'GameData/CraftingRecipesData.csv'  # Adjust the path if necessary
     create_crafting_recipes_from_csv(csv_file_path)
+    
+    

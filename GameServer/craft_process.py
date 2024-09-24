@@ -125,12 +125,12 @@ async def craft_item(user_identifier: str, output_item_unique_name: str, quantit
             print(f"Error during crafting: {e}")
             return {"status": "error", "message": str(e)}
         
-async def main():
-    result = await craft_item(
-        user_identifier='efe_latrak',
-        output_item_unique_name='mining_iron_ore',
-        quantity=300
-    )
-    print(result)
+# async def main():
+#     result = await craft_item(
+#         user_identifier='efe_latrak',
+#         output_item_unique_name='mining_iron_ore',
+#         quantity=300
+#     )
+#     print(result)
 
-asyncio.run(main())
+# asyncio.run(main())

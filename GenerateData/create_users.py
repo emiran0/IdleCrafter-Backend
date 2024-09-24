@@ -4,7 +4,7 @@ from Database.database import AsyncSessionLocal
 from Database.models import User, UserTool, Tool, Item, UserItem
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
-import bcrypt  # For password hashing (install using `pip install bcrypt`)
+from passlib.context import CryptContext
 import asyncio
 
 async def create_user(user_data):
@@ -12,7 +12,8 @@ async def create_user(user_data):
         try:
             # Hash the password (ensure you have bcrypt installed)
             password = user_data.get('Password')
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8') if password else None
+            pwd_context = CryptContext(schemes=["bcrypt"])
+            hashed_password = pwd_context.hash(password)
 
             # Create the User object
             new_user = User(
@@ -70,13 +71,17 @@ async def create_user(user_data):
             await session.refresh(new_user)
             print(f"User '{new_user.Username}' created with ID: {new_user.Id}")
 
+            # Return the new user object
+            return new_user
+
         except IntegrityError as e:
             await session.rollback()
             print(f"Integrity Error: {e.orig}")
+            raise  # Re-raise the exception to be handled in the calling function
         except Exception as e:
             await session.rollback()
             print(f"Error creating user: {e}")
-        # No need for a finally block; the async context manager handles session closure
+            raise  # Re-raise the exception
 
 async def create_users_from_csv(csv_filename):
     import csv

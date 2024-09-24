@@ -105,12 +105,12 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str):
         
 
 # Example call to craft 'advanced_pickaxe' for user with Username 'player1'
-async def main():
-    result = await craft_tool(
-        user_identifier='efe_latrak',
-        output_tool_unique_name='mining_oil_extractor'
-    )
-    print(result)
+# async def main():
+#     result = await craft_tool(
+#         user_identifier='efe_latrak',
+#         output_tool_unique_name='mining_oil_extractor'
+#     )
+#     print(result)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())
