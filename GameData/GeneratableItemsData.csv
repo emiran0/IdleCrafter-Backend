@@ -4,10 +4,11 @@ mining_pickaxe,mining_copper,,,1
 mining_pickaxe,mining_iron,,,1
 mining_oil_extractor,mining_oil,,,2
 mining_drill,mining_stone,mining_oil,1,1
-mining_drill,mining_copper,mining_oil,1,1
-mining_drill,mining_iron,mining_oil,1,1
-mining_drill,mining_silver,mining_oil,1,1
-mining_drill,mining_gold,mining_oil,1,1
+mining_drill,mining_copper,mining_oil,,1
+mining_drill,mining_iron,mining_oil,,1
+mining_drill,mining_silver,mining_oil,,1
+mining_drill,mining_gold,mining_oil,,1
+mining_drill,mining_emerald,mining_oil,,1
 farming_rake,farming_moonberry_seed,,,1
 farming_rake,farming_sungrain_seed,,,1
 farming_rake,farming_fireleaf_seed,,,1

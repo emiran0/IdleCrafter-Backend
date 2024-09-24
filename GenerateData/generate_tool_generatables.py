@@ -76,6 +76,6 @@ def create_tool_generatable_items_from_csv(csv_filename):
     except Exception as e:
         print(f"Error reading CSV file '{csv_filename}': {e}")
 
-if __name__ == "__main__":
+def main_tool_generatable_items():
     csv_file_path = 'GameData/GeneratableItemsData.csv'  # Adjust the path if necessary
     create_tool_generatable_items_from_csv(csv_file_path)

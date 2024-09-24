@@ -1,6 +1,7 @@
 InputItemUniqueName,InputQuantity,OutputToolUniqueName,GenerationDuration
 mining_stone,10,mining_pickaxe,1
 mining_stone,100,mining_furnace,1
+mining_iron_ore,50,mining_drill,1
 mining_iron_ore,40,farming_rake,1
 mining_iron_ore,50,woodcutting_axe,1
 mining_iron_ore,100,mining_oil_silo,1

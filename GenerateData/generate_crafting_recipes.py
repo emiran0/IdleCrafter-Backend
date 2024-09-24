@@ -59,7 +59,7 @@ def create_crafting_recipes_from_csv(csv_filename):
     except Exception as e:
         print(f"Error reading CSV file '{csv_filename}': {e}")
 
-if __name__ == "__main__":
+def main_crafting_recipes():
     csv_file_path = 'GameData/CraftingRecipesData.csv'  # Adjust the path if necessary
     create_crafting_recipes_from_csv(csv_file_path)
     

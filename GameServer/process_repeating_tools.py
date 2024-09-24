@@ -19,12 +19,16 @@ def process_repeating_tools():
             Tool.isRepeating == True,
             UserTool.isEnabled == True
         ).all()
-        print(f"Processing {len(user_tools)} repeating tools.")
+
+        # Get the total number of unique users
+        unique_users = {user_tool.user.Id for user_tool in user_tools}
+        total_users = len(unique_users)
+
+        print(f"Processing {len(user_tools)} repeating tools for {total_users} unique users.")
+        
         for user_tool in user_tools:
             user = user_tool.user
             tool = user_tool.tool
-
-            print(f"Processing tool '{tool.Name}' for user '{user.Username}'.")
 
             # Get the user's item quantities
             user_items_dict = {ui.UniqueName: ui for ui in user.items}
@@ -78,8 +82,6 @@ def process_repeating_tools():
                         )
                         db.add(user_item)
                         user_items_dict[item.UniqueName] = user_item  # Update the dict
-
-                    print(f"Generated '{item.Name}' x{quantity_to_add} for user '{user.Username}'.")
 
             db.commit()
     except Exception as e:

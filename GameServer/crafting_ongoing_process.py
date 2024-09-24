@@ -65,15 +65,18 @@ async def crafting_ongoing_process():
                     user_item_result = await session.execute(user_items_query)
                     user_item = user_item_result.scalars().one_or_none()
 
+                    # Output item multiplier
+                    output_multiplier = recipe_entries[0].OutputQuantity
+
                     if user_item:
-                        user_item.Quantity += crafted_quantity
+                        user_item.Quantity += crafted_quantity * output_multiplier
                     else:
                         # Create new UserItem
                         user_item = UserItem(
                             UserId=user.Id,
                             Username=user.Username,
                             UniqueName=crafting_item_name,
-                            Quantity=crafted_quantity
+                            Quantity=crafted_quantity * output_multiplier
                         )
                         session.add(user_item)
                     # Step 4: Update UserTool

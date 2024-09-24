@@ -13,7 +13,7 @@ mining_oil,Oil,Mining,0.0,1.0,False,False,Black gold-used for many things.
 farming_moonberry_seed,Moonberry Seed,Farming,0.0,0.08,False,False, A seed which commonly can be found.
 farming_sungrain_seed,Sungrain Seed,Farming,0.0,0.04,False,False,A seed which ocassionally can be found.
 farming_fireleaf_seed,Fireleaf Seed,Farming,0.0,0.01,False,False,A seed which rarely can be found.
-farming_aquasprout_seed,Aquasproud Seed,Farming,0.0,0.05,False,False,A seed which very rarely can be found.
+farming_aquasprout_seed,Aquasproud Seed,Farming,0.0,0.005,False,False,A seed which very rarely can be found.
 farming_nightshade_seed,Nightshade Seed,Farming,0.0,0.001,False,False,A seed which almost never can be found.
 farming_lunar_berries,Lunar Berries,Farming,0.0,1.0,False,True,Used for special things.
 farming_golden_sheaf,Golden Sheaf,Farming,0.0,1.0,False,True,Used for special things.

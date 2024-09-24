@@ -53,6 +53,6 @@ def create_tools_from_csv(csv_filename):
     except Exception as e:
         print(f"Error reading CSV file '{csv_filename}': {e}")
 
-if __name__ == "__main__":
+def main_create_tools():
     csv_file_path = 'GameData/ToolData.csv'  # Adjust the path if necessary
     create_tools_from_csv(csv_file_path)

@@ -7,10 +7,30 @@ from sqlalchemy import select
 from passlib.context import CryptContext
 import asyncio
 
+class UserAlreadyExistsError(Exception):
+    """Exception raised when a username or email is already taken."""
+    pass
+
 async def create_user(user_data):
     async with AsyncSessionLocal() as session:
         try:
-            # Hash the password (ensure you have bcrypt installed)
+            # Check if the username already exists
+            result = await session.execute(
+                select(User).filter(User.Username == user_data['Username'])
+            )
+            existing_user = result.scalar_one_or_none()
+            if existing_user:
+                raise UserAlreadyExistsError(f"Username '{user_data['Username']}' is already taken.")
+
+            # Check if the email already exists
+            result = await session.execute(
+                select(User).filter(User.Email == user_data['Email'])
+            )
+            existing_email = result.scalar_one_or_none()
+            if existing_email:
+                raise UserAlreadyExistsError(f"Email '{user_data['Email']}' is already registered.")
+
+            # Hash the password
             password = user_data.get('Password')
             pwd_context = CryptContext(schemes=["bcrypt"])
             hashed_password = pwd_context.hash(password)
@@ -19,7 +39,7 @@ async def create_user(user_data):
             new_user = User(
                 Username=user_data['Username'],
                 Email=user_data['Email'],
-                Password=hashed_password  # Store hashed password
+                Password=hashed_password
             )
 
             session.add(new_user)
@@ -41,7 +61,7 @@ async def create_user(user_data):
                     UserId=new_user.Id,
                     Username=new_user.Username,
                     ToolUniqueName=tool.UniqueName,
-                    Tier=1  # Set initial tier as appropriate
+                    Tier=1
                 )
                 session.add(user_tool)
                 print(f"Assigned tool '{tool.Name}' to user '{new_user.Username}'.")
@@ -74,14 +94,18 @@ async def create_user(user_data):
             # Return the new user object
             return new_user
 
+        except UserAlreadyExistsError as e:
+            await session.rollback()
+            print(str(e))
+            raise  # Re-raise the exception
         except IntegrityError as e:
             await session.rollback()
             print(f"Integrity Error: {e.orig}")
-            raise  # Re-raise the exception to be handled in the calling function
+            raise
         except Exception as e:
             await session.rollback()
             print(f"Error creating user: {e}")
-            raise  # Re-raise the exception
+            raise
 
 async def create_users_from_csv(csv_filename):
     import csv

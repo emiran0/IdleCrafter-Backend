@@ -45,6 +45,6 @@ def create_items_from_csv(csv_filename):
     except Exception as e:
         print(f"Error reading CSV file '{csv_filename}': {e}")
 
-if __name__ == "__main__":
+def main_create_items():
     csv_file_path = 'GameData/ItemData.csv'  # Adjust the path if necessary
     create_items_from_csv(csv_file_path)
