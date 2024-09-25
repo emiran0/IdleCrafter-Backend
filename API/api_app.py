@@ -75,7 +75,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 async def signup(request: SignupRequest):
     try:
         # Convert the request data to a dictionary
-        user_data = request.dict()
+        user_data = request.model_dump()
         
         # Call the existing create_user function
         new_user = await create_user(user_data)
