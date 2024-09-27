@@ -33,3 +33,7 @@ alchemy_enhanced_yield,Enhanced Yield Potion,Alchemy,0.0,1.0,False,True,Increase
 alchemy_miners_brew,Miner's Brew,Alchemy,0.0,1.0,False,True,Boosts mining speed by 15% for a limited time.
 alchemy_lumberjacks_strength,Lumberjack's Strength Potion,Alchemy,0.0,1.0,False,True,Increases the amount of logs obtained per tree by 25%.
 alchemy_fishermans_elixir,Fisherman’s Elixir,Alchemy,0.0,1.0,False,True,Enhances the chance of catching rarer fish by 30%.
+alchemy_smelters_draught,Smelter's Draught,Alchemy,0.0,1.0,False,True,Increases the amount of metal obtained per ore by 20%.
+fishing_trout,Trout,Fishing,10,0.01,False,False,A common fish-used for many things.
+fishing_salmon,Salmon,Fishing,30,0.002,False,False,A fish which swims in colder waters-used for many things.
+fishing_tuna,Tuna,Fishing,100,0.0005,False,False,A fish which swims in warmer waters-used for many things.
