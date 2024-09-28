@@ -1,12 +1,26 @@
-﻿UniqueName,Name,Category,isRepeating,ProbabilityBoost,ToolDescription,StorageCapacity
-player_ultimate,Player Ultimate,All,True,1,The ultimate tool THE PLAYER HIMSELF used for everything.,
-mining_pickaxe,Pickaxe,Mining,True,1,The classic mining tool-used for many things.,
-mining_furnace,Furnace,Mining,False,1,Used to smelt ores into metals.,
-mining_oil_extractor,Oil Extractor,Mining,True,1,Used to extract oil from the ground.,400
-mining_oil_silo,Oil Silo,Mining,False,1,Used to store oil.,1000
-mining_drill,Drill,Mining,True,1,Used to drill into the ground.,
-mining_excavator,Excavator,Mining,True,1,Used to excavate the ground.,
-farming_rake,Rake,Farming,True,1,Used to rake the ground.,
-woodcutting_axe,Axe,Woodcutting,False,1,Used to cut trees.,
-alchemy_mortar_and_pestle,Mortar and Pestle,Alchemy,False,1,Used to grind ingredients.,
-fishing_rod,Fishing Rod,Fishing,True,1,Used to catch fish.,
+﻿UniqueName,Name,Category,isRepeating,ProbabilityBoost,ToolDescription,StorageCapacity,Tier,isMultipleCraftable,maxCraftingNumber
+player_ultimate,Player Ultimate,All,True,1,The ultimate tool-THE PLAYER ITSELF.,,1,False,1
+mining_pickaxe,Pickaxe,Mining,True,1,The classic mining tool-used for many things.,,1,False,1
+mining_pickaxe,Pickaxe,Mining,True,1.2,The classic mining tool-used for many things.,,2,False,1
+mining_pickaxe,Pickaxe,Mining,True,1.5,The classic mining tool-used for many things.,,3,False,1
+mining_furnace,Furnace,Mining,False,1,Used to smelt ores into metals.,,1,False,1
+mining_furnace,Furnace,Mining,False,1.2,Used to smelt ores into metals.,,2,False,1
+mining_furnace,Furnace,Mining,False,1.5,Used to smelt ores into metals.,,3,False,1
+mining_oil_extractor,Oil Extractor,Mining,True,1,Used to extract oil from the ground.,400,1,False,1
+mining_oil_extractor,Oil Extractor,Mining,True,1.2,Used to extract oil from the ground.,800,2,False,1
+mining_oil_extractor,Oil Extractor,Mining,True,1.5,Used to extract oil from the ground.,2000,3,False,1
+mining_oil_silo,Oil Silo,Mining,False,1,Used to store oil.,1000,1,False,1
+mining_drill,Drill,Mining,True,1,Used to drill into the ground.,,1,True,3
+mining_excavator,Excavator,Mining,True,1,Used to excavate the ground.,,1,True,3
+farming_rake,Rake,Farming,True,1,Used to rake the ground.,,1,False,1
+farming_rake,Rake,Farming,True,1.2,Used to rake the ground.,,2,False,1
+farming_rake,Rake,Farming,True,1.5,Used to rake the ground.,,3,False,1
+woodcutting_axe,Axe,Woodcutting,False,1,Used to cut trees.,,1,False,1
+woodcutting_axe,Axe,Woodcutting,False,1.2,Used to cut trees.,,2,False,1
+woodcutting_axe,Axe,Woodcutting,False,1.5,Used to cut trees.,,3,False,1
+alchemy_mortar_and_pestle,Mortar and Pestle,Alchemy,False,1,Used to grind ingredients.,,1,False,1
+alchemy_mortar_and_pestle,Mortar and Pestle,Alchemy,False,1.2,Used to grind ingredients.,,2,False,1
+alchemy_mortar_and_pestle,Mortar and Pestle,Alchemy,False,1.5,Used to grind ingredients.,,3,False,1
+fishing_rod,Fishing Rod,Fishing,True,1,Used to catch fish.,,1,False,1
+fishing_rod,Fishing Rod,Fishing,True,1.2,Used to catch fish.,,2,False,1
+fishing_rod,Fishing Rod,Fishing,True,1.5,Used to catch fish.,,3,False,1

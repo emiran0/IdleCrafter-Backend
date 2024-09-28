@@ -1,8 +1,10 @@
+# Database/models.py
+
 from sqlalchemy import (
     Column, Integer, String, ForeignKey, Float, DateTime, Boolean
 )
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from datetime import datetime
 from Database.database import Base
 import uuid
@@ -27,7 +29,7 @@ class Item(Base):
     __tablename__ = 'items'
 
     Id = Column(Integer, primary_key=True, index=True)
-    UniqueName = Column(String, unique=True)
+    UniqueName = Column(String, unique=True, nullable=False)
     Name = Column(String, nullable=False)
     Category = Column(String, nullable=False)
     GoldValue = Column(Float, default=0.0, nullable=True)
@@ -54,18 +56,27 @@ class Tool(Base):
     __tablename__ = 'tools'
 
     Id = Column(Integer, primary_key=True, index=True)
-    UniqueName = Column(String, unique=True)    # Unique name for the tool
-    Name = Column(String, nullable=False)       # Display name for the tool
-    Category = Column(String, nullable=False)   # Category of the tool
-    isRepeating = Column(Boolean, default=False, nullable=True) # Whether the tool is repeating
-    ProbabilityBoost = Column(Float, default=1.0, nullable=True)   # Boost to the probability of generating items
-    ToolDescription = Column(String, nullable=True) # Description of the tool
-    StorageCapacity = Column(Integer, nullable=True)   # Storage capacity of the tool
+    UniqueName = Column(String, nullable=False)    # Unique name for the tool
+    Name = Column(String, nullable=False)          # Display name for the tool
+    Category = Column(String, nullable=False)      # Category of the tool
+    isRepeating = Column(Boolean, default=False, nullable=True)  # Whether the tool is repeating
+    ProbabilityBoost = Column(Float, default=1.0, nullable=True) # Boost to the probability of generating items
+    ToolDescription = Column(String, nullable=True)              # Description of the tool
+    StorageCapacity = Column(Integer, nullable=True)             # Storage capacity of the tool
+
+    # New columns
+    Tier = Column(Integer, default=1, nullable=True)                 # Tier of the tool
+    isMultipleCraftable = Column(Boolean, default=False, nullable=True)  # Whether multiple instances can be crafted
+    maxCraftingNumber = Column(Integer, nullable=True)               # Max instances a user can have
 
     # Relationships
     user_tools = relationship('UserTool', back_populates='tool')
-    generatable_items = relationship('ToolGeneratableItem', back_populates='tool', cascade='all, delete-orphan')
-    recipes = relationship('CraftingRecipe', back_populates='tool')
+    generatable_items = relationship(
+        'ToolGeneratableItem',
+        back_populates='tool',
+        cascade='all, delete-orphan'
+    )
+    recipes = relationship('ToolCraftingRecipe', back_populates='output_tool')
 
 class ToolGeneratableItem(Base):
     __tablename__ = 'tool_generatable_items'
@@ -82,21 +93,6 @@ class ToolGeneratableItem(Base):
     generated_item = relationship('Item', foreign_keys=[ItemUniqueName], back_populates='generated_by_tools')
     resource_item = relationship('Item', foreign_keys=[ResourceUniqueName], back_populates='tools_requiring_this_item')
 
-class CraftingRecipe(Base):
-    __tablename__ = 'crafting_recipes'
-
-    Id = Column(Integer, primary_key=True, index=True)
-    InputItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)    # Item required as input
-    InputQuantity = Column(Integer, nullable=False)   # Quantity of the input item required   
-    ToolUniqueName = Column(String, ForeignKey('tools.UniqueName'), nullable=False)   # Tool required to craft the item
-    OutputItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)   # Item that is crafted
-    OutputQuantity = Column(Integer, nullable=False)    # Quantity of the output item
-    GenerationDuration = Column(Float, default=5.0)    # Duration in seconds to generate the output item
-
-    # Relationships
-    input_item = relationship('Item', foreign_keys=[InputItemUniqueName])
-    output_item = relationship('Item', foreign_keys=[OutputItemUniqueName])
-    tool = relationship('Tool', foreign_keys=[ToolUniqueName], back_populates='recipes')
 class ToolCraftingRecipe(Base):
     __tablename__ = 'tool_crafting_recipes'
 
@@ -104,11 +100,17 @@ class ToolCraftingRecipe(Base):
     InputItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)
     InputQuantity = Column(Integer, nullable=False)
     OutputToolUniqueName = Column(String, ForeignKey('tools.UniqueName'), nullable=False)
+    OutputToolTier = Column(Integer, nullable=False)
     GenerationDuration = Column(Float, default=1.0)  # Duration in seconds to craft the tool
 
     # Relationships
     input_item = relationship('Item', foreign_keys=[InputItemUniqueName])
-    output_tool = relationship('Tool', foreign_keys=[OutputToolUniqueName])
+    output_tool = relationship(
+        'Tool',
+        primaryjoin="and_(Tool.UniqueName == ToolCraftingRecipe.OutputToolUniqueName, Tool.Tier == ToolCraftingRecipe.OutputToolTier)",
+        back_populates='recipes'
+    )
+
 class UserItem(Base):
     __tablename__ = 'user_items'
 
@@ -116,7 +118,7 @@ class UserItem(Base):
     UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
     Username = Column(String, nullable=False)   # Username of the user
     UniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)   # Unique name of the item
-    Quantity = Column(Integer, default=0)   # Quantity of the item that the user has
+    Quantity = Column(Integer, default=0)       # Quantity of the item that the user has
 
     # Relationships
     user = relationship('User', back_populates='items')
@@ -127,16 +129,20 @@ class UserTool(Base):
 
     Id = Column(Integer, primary_key=True, index=True)
     UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)   # User that has the tool
-    Username = Column(String, nullable=False)   # Username of the user
-    ToolUniqueName = Column(String, ForeignKey('tools.UniqueName'), nullable=False)   # Tool that the user has
-    Tier = Column(Integer, default=1)   # Tier of the tool
-    AcquiredAt = Column(DateTime, default=datetime.now(), nullable=True)   # When the user acquired the tool
-    isEnabled = Column(Boolean, default=True, nullable=True)    # Whether the tool is enabled
-    isOccupied = Column(Boolean, default=False)    # Whether the tool is currently occupied
-    LastUsed = Column(DateTime, default=None, nullable=True)    # When the user last used the tool, only if it is not repeating
+    Username = Column(String, nullable=False)                                       # Username of the user
+    ToolUniqueName = Column(String, ForeignKey('tools.UniqueName'), nullable=False) # Tool that the user has
+    Tier = Column(Integer, nullable=False)                                          # Tier of the tool
+    AcquiredAt = Column(DateTime, default=datetime.now(), nullable=True)            # When the user acquired the tool
+    isEnabled = Column(Boolean, default=True, nullable=True)                        # Whether the tool is enabled
+    isOccupied = Column(Boolean, default=False)                                     # Whether the tool is currently occupied
+    LastUsed = Column(DateTime, default=None, nullable=True)                        # When the user last used the tool, only if it is not repeating
     OngoingCraftingItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=True)  # The item currently being crafted
-    OngoingRemainedQuantity = Column(Integer, nullable=True)   # The remaining quantity to be crafted
+    OngoingRemainedQuantity = Column(Integer, nullable=True)                        # The remaining quantity to be crafted
 
     # Relationships
     user = relationship('User', back_populates='tools')
-    tool = relationship('Tool', back_populates='user_tools')
+    tool = relationship(
+        'Tool',
+        primaryjoin="and_(Tool.UniqueName == UserTool.ToolUniqueName, Tool.Tier == UserTool.Tier)",
+        back_populates='user_tools'
+    )
