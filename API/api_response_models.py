@@ -29,6 +29,7 @@ class Token(BaseModel):
 # Request model for crafting a tool
 class CraftToolRequest(BaseModel):
     tool_unique_name: str
+    tool_tier: int = 1  # Default tier to 1
 
 # Request model for crafting an item
 class CraftItemRequest(BaseModel):
@@ -65,3 +66,29 @@ class UserItemsResponse(BaseModel):
 class ToolToggleResponse(BaseModel):
     tool_unique_name: str
     isEnabled: bool
+
+class RequiredItem(BaseModel):
+    item_unique_name: str
+    item_display_name: str
+    required_quantity: int
+
+class CraftableTool(BaseModel):
+    unique_tool_name: str
+    display_name: str
+    required_items: List[RequiredItem]
+
+class InputItem(BaseModel):
+    input_item_unique_name: str
+    input_item_display_name: str
+    input_item_quantity: int
+
+class Recipe(BaseModel):
+    output_item_unique_name: str
+    output_item_display_name: str
+    generation_duration: int
+    input_items: List[InputItem]
+
+class ToolRecipes(BaseModel):
+    unique_tool_name: str
+    tool_tier: int
+    recipe_list: List[Recipe]

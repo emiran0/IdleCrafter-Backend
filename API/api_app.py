@@ -8,15 +8,17 @@ import asyncio
 from contextlib import asynccontextmanager
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from collections import OrderedDict
+from typing import List
 
 from .api_response_models import (
     SignupRequest, UserResponse, Token,
     CraftToolRequest, CraftItemRequest,
     ToolData, ItemData, UserToolsResponse, UserItemsResponse,
-    ToolToggleResponse
+    ToolToggleResponse, CraftableTool, RequiredItem, ToolRecipes
 )
 from .api_db_access import (
-    fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled
+    fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled,
+    get_available_tool_crafting_recipes, get_item_crafting_recipes
 )
 from GenerateData.create_users import create_user, UserAlreadyExistsError
 from GameServer.process_repeating_tools import process_repeating_tools
@@ -109,13 +111,8 @@ async def craft_tool_endpoint(
     request: CraftToolRequest,
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        # Call the async function to craft the tool
-        result = await craft_tool(current_user.Username, request.tool_unique_name)
-        return result  # Return the dictionary directly
-    except Exception as e:
-        # Handle exceptions and return an error response
-        raise HTTPException(status_code=400, detail=str(e))
+    result = await craft_tool(current_user.Username, request.tool_unique_name, request.tool_tier)
+    return result  # Return the success message
     
 # Endpoint to craft an item
 @app.post("/craft/item")
@@ -123,13 +120,9 @@ async def craft_item_endpoint(
     request: CraftItemRequest,
     current_user: User = Depends(get_current_user)
 ):
-    try:
-        # Call the async function to craft the item
-        result = await craft_item(current_user.Username, request.item_unique_name, request.quantity)
-        return result  # Return the dictionary directly
-    except Exception as e:
-        # Handle exceptions and return an error response
-        raise HTTPException(status_code=400, detail=str(e))
+    # Call the async function to craft the item
+    result = await craft_item(current_user.Username, request.item_unique_name, request.quantity)
+    return result  # Return the success message
 
 # GET endpoint for user's tools
 @app.get("/user/tools", response_model=UserToolsResponse)
@@ -225,3 +218,23 @@ async def toggle_tool_enabled(
         raise HTTPException(status_code=404, detail="Tool not found for user")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# GET endpoint to fetch tool crafting recipes    
+@app.get("/tool-crafting-recipes", response_model=List[CraftableTool])
+async def get_tool_crafting_recipes(current_user: User = Depends(get_current_user)):
+    try:
+        recipes = await get_available_tool_crafting_recipes(current_user.Username)
+        return recipes
+    except Exception as e:
+        print(f"Error fetching tool crafting recipes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# GET endpoint to fetch item crafting recipes
+@app.get("/item-crafting-recipes", response_model=List[ToolRecipes])
+async def get_item_crafting_recipes_endpoint():
+    try:
+        recipes = await get_item_crafting_recipes()
+        return recipes
+    except Exception as e:
+        print(f"Error fetching item crafting recipes: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

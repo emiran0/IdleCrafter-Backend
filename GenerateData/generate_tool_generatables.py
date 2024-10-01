@@ -45,6 +45,7 @@ def create_tool_generatable_item(data):
         # Create the ToolGeneratableItem object
         new_tgi = ToolGeneratableItem(
             ToolUniqueName=data['ToolUniqueName'],
+            ToolTier=data['ToolTier'],
             ItemUniqueName=data['ItemUniqueName'],
             ResourceUniqueName=resource_unique_name,
             ResourceQuantity=resource_quantity,
@@ -79,3 +80,4 @@ def create_tool_generatable_items_from_csv(csv_filename):
 def main_tool_generatable_items():
     csv_file_path = 'GameData/GeneratableItemsData.csv'  # Adjust the path if necessary
     create_tool_generatable_items_from_csv(csv_file_path)
+    print("ToolGeneratableItems created.")

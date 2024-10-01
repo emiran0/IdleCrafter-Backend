@@ -29,6 +29,7 @@ def create_crafting_recipe(data):
             InputItemUniqueName=data['InputItemUniqueName'],
             InputQuantity=int(data['InputQuantity']),
             ToolUniqueName=data['ToolUniqueName'],
+            ToolTier=data['ToolTier'],
             OutputItemUniqueName=data['OutputItemUniqueName'],
             OutputQuantity=int(data['OutputQuantity']),
             GenerationDuration=float(data['GenerationDuration']) if data.get('GenerationDuration') else None
@@ -62,5 +63,6 @@ def create_crafting_recipes_from_csv(csv_filename):
 def main_crafting_recipes():
     csv_file_path = 'GameData/CraftingRecipesData.csv'  # Adjust the path if necessary
     create_crafting_recipes_from_csv(csv_file_path)
+    print("CraftingRecipe creation complete.")
     
     

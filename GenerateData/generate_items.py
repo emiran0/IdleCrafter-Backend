@@ -48,3 +48,4 @@ def create_items_from_csv(csv_filename):
 def main_create_items():
     csv_file_path = 'GameData/ItemData.csv'  # Adjust the path if necessary
     create_items_from_csv(csv_file_path)
+    print("Item creation complete.")

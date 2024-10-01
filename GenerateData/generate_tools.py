@@ -25,7 +25,10 @@ def create_tool(tool_data):
             isRepeating=is_repeating,
             ProbabilityBoost=probability_boost,
             ToolDescription=tool_data.get('ToolDescription'),
-            StorageCapacity=storage_capacity
+            StorageCapacity=storage_capacity,
+            Tier=int(tool_data['Tier']),
+            isMultipleCraftable=tool_data.get('isMultipleCraftable', '').strip().lower() == 'true',
+            maxCraftingNumber=int(tool_data['maxCraftingNumber']) if tool_data.get('maxCraftingNumber') else 1
         )
 
         db.add(new_tool)
@@ -56,3 +59,4 @@ def create_tools_from_csv(csv_filename):
 def main_create_tools():
     csv_file_path = 'GameData/ToolData.csv'  # Adjust the path if necessary
     create_tools_from_csv(csv_file_path)
+    print("Tool creation complete.")

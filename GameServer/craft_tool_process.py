@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, and_
@@ -39,7 +40,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
 
             if not user:
                 print("User not found.")
-                return {"status": "error", "message": "User not found."}
+                raise HTTPException(status_code=404, detail="User not found.")
 
             # Step 2: Retrieve the tool
             tool_query = select(Tool).filter(
@@ -51,7 +52,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
 
             if not tool:
                 print(f"Tool '{output_tool_unique_name}' with Tier {tier} not found in the database.")
-                return {"status": "error", "message": f"Tool '{output_tool_unique_name}' with Tier {tier} not found."}
+                raise HTTPException(status_code=404, detail=f"Tool '{output_tool_unique_name}' with Tier {tier} not found.")
 
             # Step 3: Retrieve all crafting recipes for the tool and tier
             recipe_query = select(ToolCraftingRecipe).filter(
@@ -63,7 +64,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
 
             if not recipes:
                 print(f"No crafting recipe found for tool '{output_tool_unique_name}' with Tier {tier}.")
-                return {"status": "error", "message": "Crafting recipe not found."}
+                raise HTTPException(status_code=404, detail="Crafting recipe not found.")
 
             # Step 4: Check if the user has enough input items
             user_items_dict = {ui.UniqueName: ui for ui in user.items}
@@ -81,10 +82,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
             if missing_items:
                 missing_items_str = ', '.join(missing_items)
                 print(f"User lacks required input items: {missing_items_str}")
-                return {
-                    "status": "error",
-                    "message": f"Insufficient input items. Missing: {missing_items_str}."
-                }
+                raise HTTPException(status_code=400, detail=f"Missing required input items: {missing_items_str}")
 
             # Step 5: Deduct input items from the user's inventory
             for recipe in recipes:
@@ -113,7 +111,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
                         return {"status": "success", "message": f"Upgraded tool '{output_tool_unique_name}' to Tier {tier}."}
                     else:
                         print(f"User already has the tool '{output_tool_unique_name}' with Tier {existing_user_tool.Tier}.")
-                        return {"status": "error", "message": f"User already has the tool '{output_tool_unique_name}' with equal or higher Tier."}
+                        raise HTTPException(status_code=400, detail=f"User already has the tool '{output_tool_unique_name}' with equal or higher Tier.")
                 else:
                     # User doesn't have the tool yet, create new UserTool
                     new_user_tool = UserTool(
@@ -133,7 +131,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
                 current_count = len(user_tools_of_type)
                 if tool.maxCraftingNumber is not None and current_count >= tool.maxCraftingNumber:
                     print(f"User already has maximum number ({tool.maxCraftingNumber}) of '{output_tool_unique_name}'.")
-                    return {"status": "error", "message": f"Cannot craft more than {tool.maxCraftingNumber} instances of '{output_tool_unique_name}'."}
+                    raise HTTPException(status_code=400, detail=f"Cannot craft more than {tool.maxCraftingNumber} instances of '{output_tool_unique_name}'.")
                 else:
                     # Create new UserTool
                     new_user_tool = UserTool(
@@ -149,7 +147,11 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
                     print(f"User '{user.Username}' crafted tool '{output_tool_unique_name}' at Tier {tier}.")
                     return {"status": "success", "message": f"Crafted tool '{output_tool_unique_name}' at Tier {tier}."}
 
+        except HTTPException as http_exc:
+            await session.rollback()
+            print(f"HTTPException during tool crafting: {http_exc.detail}")
+            raise http_exc  # Re-raise to be handled by FastAPI
         except Exception as e:
             await session.rollback()
             print(f"Error during tool crafting: {e}")
-            return {"status": "error", "message": str(e)}
+            raise HTTPException(status_code=500, detail="Internal server error")
