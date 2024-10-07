@@ -25,6 +25,7 @@ class User(Base):
     # Relationships
     items = relationship('UserItem', back_populates='user')
     tools = relationship('UserTool', back_populates='user')
+    market_listings = relationship('Market', back_populates='seller', cascade='all, delete-orphan')
 
 class Item(Base):
     __tablename__ = 'items'
@@ -67,6 +68,7 @@ class Item(Base):
         back_populates='ongoing_crafting_item',
         foreign_keys='UserTool.OngoingCraftingItemUniqueName'
     )
+    market_listings = relationship('Market', back_populates='item', cascade='all, delete-orphan')
 
 class Tool(Base):
     __tablename__ = 'tools'
@@ -104,7 +106,6 @@ class Tool(Base):
         back_populates='output_tool',
         primaryjoin="and_(Tool.UniqueName == foreign(ToolCraftingRecipe.OutputToolUniqueName), Tool.Tier == foreign(ToolCraftingRecipe.OutputToolTier))"
     )
-    # Corrected relationship
     item_crafting_recipes = relationship(
         'CraftingRecipe',
         back_populates='tool',
@@ -172,7 +173,6 @@ class CraftingRecipe(Base):
         back_populates='output_recipes',
         foreign_keys=[OutputItemUniqueName]
     )
-    # Corrected relationship
     tool = relationship(
         'Tool',
         back_populates='item_crafting_recipes',
@@ -253,3 +253,19 @@ class UserTool(Base):
         back_populates='ongoing_crafting_user_tools',
         foreign_keys=[OngoingCraftingItemUniqueName]
     )
+
+class Market(Base):
+    __tablename__ = 'market'
+
+    Id = Column(Integer, primary_key=True, index=True)
+    SellerId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
+    SellerUsername = Column(String, nullable=False)
+    ItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)
+    Quantity = Column(Integer, nullable=False)
+    Price = Column(Float, nullable=False)
+    ListCreatedAt = Column(DateTime, default=datetime.now())
+    ExpireDate = Column(DateTime, nullable=True)
+
+    # Relationships
+    seller = relationship('User', back_populates='market_listings')
+    item = relationship('Item', back_populates='market_listings')

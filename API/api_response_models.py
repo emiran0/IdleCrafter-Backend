@@ -92,3 +92,45 @@ class ToolRecipes(BaseModel):
     unique_tool_name: str
     tool_tier: int
     recipe_list: List[Recipe]
+
+class MarketListing(BaseModel):
+    id: int
+    seller_id: str
+    seller_username: str
+    item_unique_name: str
+    item_display_name: str
+    item_description: Optional[str]
+    quantity: int
+    price: float
+    list_created_at: datetime
+    expire_date: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True  # Use orm_mode to allow ORM objects
+
+class MarketListingsResponse(BaseModel):
+    listings: List[MarketListing]
+
+class ListItemRequest(BaseModel):
+    item_unique_name: str
+    quantity: int
+    price: float
+    expire_date: Optional[datetime] = None
+
+class ListItemResponse(BaseModel):
+    status: str
+    message: str
+    listing_id: int
+
+class BuyItemRequest(BaseModel):
+    listing_id: int
+    quantity: int
+
+class BuyItemResponse(BaseModel):
+    status: str
+    message: str
+    total_price: float
+    item_unique_name: str
+    item_display_name: str
+    quantity_bought: int
+    buyer_gold_balance: float

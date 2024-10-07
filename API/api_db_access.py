@@ -4,12 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.exc import NoResultFound
-from typing import List, Dict
+from typing import List, Dict, Optional
+from datetime import datetime
 from Database.database import AsyncSessionLocal
 from Database.models import (
-    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe
+    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe,Market
 )
-from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem
+from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing
 
 
 # Function to get user tools
@@ -229,3 +230,134 @@ async def get_item_crafting_recipes() -> List[ToolRecipes]:
         except Exception as e:
             print(f"Error fetching item crafting recipes: {e}")
             raise
+
+# Function to get market listings
+async def fetch_market_listings() -> List[MarketListing]:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Market)
+            .options(
+                selectinload(Market.item),
+                selectinload(Market.seller)
+            )
+            .order_by(Market.ListCreatedAt.desc())
+        )
+        listings = result.scalars().all()
+        market_listings = []
+        for listing in listings:
+            market_listings.append(MarketListing(
+                id=listing.Id,
+                seller_id=str(listing.SellerId),
+                seller_username=listing.SellerUsername,
+                item_unique_name=listing.ItemUniqueName,
+                item_display_name=listing.item.Name,
+                item_description=listing.item.ItemDescription,
+                quantity=listing.Quantity,
+                price=listing.Price,
+                list_created_at=listing.ListCreatedAt,
+                expire_date=listing.ExpireDate
+            ))
+        return market_listings
+
+# Function to create a market listing
+async def create_market_listing(user: User, item_unique_name: str, quantity: int, price: float, expire_date: Optional[datetime]=None):
+    async with AsyncSessionLocal() as session:
+        try:
+            # Check if user has enough of the item
+            user_item_query = select(UserItem).filter(
+                UserItem.UserId == user.Id,
+                UserItem.UniqueName == item_unique_name
+            )
+            result = await session.execute(user_item_query)
+            user_item = result.scalar_one_or_none()
+            if not user_item or user_item.Quantity < quantity:
+                raise Exception("Insufficient quantity of item to list.")
+            # Deduct the quantity from the user's inventory
+            user_item.Quantity -= quantity
+            session.add(user_item)
+            # Create the market listing
+            new_listing = Market(
+                SellerId=user.Id,
+                SellerUsername=user.Username,
+                ItemUniqueName=item_unique_name,
+                Quantity=quantity,
+                Price=price,
+                ListCreatedAt=datetime.utcnow(),
+                ExpireDate=expire_date
+            )
+            session.add(new_listing)
+            await session.commit()
+            await session.refresh(new_listing)
+            return new_listing
+        except Exception as e:
+            await session.rollback()
+            raise e
+
+# Function to buy items from the market
+async def buy_market_item(buyer: User, listing_id: int, quantity: int):
+    async with AsyncSessionLocal() as session:
+        try:
+            # Fetch the listing
+            listing_query = select(Market).filter(
+                Market.Id == listing_id
+            ).options(
+                selectinload(Market.item),
+                selectinload(Market.seller)
+            )
+            result = await session.execute(listing_query)
+            listing = result.scalar_one_or_none()
+            if not listing:
+                raise Exception("Listing not found.")
+            if listing.Quantity < quantity:
+                raise Exception("Not enough quantity available in the listing.")
+            if listing.SellerId == buyer.Id:
+                raise Exception("Cannot buy your own listing.")
+            # Calculate total price
+            total_price = listing.Price * quantity
+            if buyer.Gold < total_price:
+                raise Exception("Insufficient gold to complete the purchase.")
+            # Deduct gold from buyer
+            buyer.Gold -= total_price
+            session.add(buyer)
+            # Add gold to seller
+            seller_query = select(User).filter(User.Id == listing.SellerId)
+            seller_result = await session.execute(seller_query)
+            seller = seller_result.scalar_one_or_none()
+            if seller:
+                seller.Gold += total_price
+                session.add(seller)
+            # Add item to buyer's inventory
+            buyer_item_query = select(UserItem).filter(
+                UserItem.UserId == buyer.Id,
+                UserItem.UniqueName == listing.ItemUniqueName
+            )
+            buyer_item_result = await session.execute(buyer_item_query)
+            buyer_item = buyer_item_result.scalar_one_or_none()
+            if buyer_item:
+                buyer_item.Quantity += quantity
+            else:
+                buyer_item = UserItem(
+                    UserId=buyer.Id,
+                    Username=buyer.Username,
+                    UniqueName=listing.ItemUniqueName,
+                    Quantity=quantity
+                )
+                session.add(buyer_item)
+            # Deduct quantity from listing
+            listing.Quantity -= quantity
+            if listing.Quantity == 0:
+                await session.delete(listing)
+            else:
+                session.add(listing)
+            await session.commit()
+            await session.refresh(buyer)  # Refresh buyer to get updated Gold
+            return {
+                'total_price': total_price,
+                'item_unique_name': listing.ItemUniqueName,
+                'item_display_name': listing.item.Name,
+                'quantity_bought': quantity,
+                'buyer_gold_balance': buyer.Gold
+            }
+        except Exception as e:
+            await session.rollback()
+            raise e

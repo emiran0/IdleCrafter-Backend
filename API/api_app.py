@@ -14,11 +14,14 @@ from .api_response_models import (
     SignupRequest, UserResponse, Token,
     CraftToolRequest, CraftItemRequest,
     ToolData, ItemData, UserToolsResponse, UserItemsResponse,
-    ToolToggleResponse, CraftableTool, RequiredItem, ToolRecipes
+    ToolToggleResponse, CraftableTool, RequiredItem, ToolRecipes,
+    MarketListingsResponse, ListItemRequest, ListItemResponse,
+    BuyItemRequest, BuyItemResponse
 )
 from .api_db_access import (
     fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled,
-    get_available_tool_crafting_recipes, get_item_crafting_recipes
+    get_available_tool_crafting_recipes, get_item_crafting_recipes, fetch_market_listings, 
+    create_market_listing, buy_market_item
 )
 from GenerateData.create_users import create_user, UserAlreadyExistsError
 from GameServer.process_repeating_tools import process_repeating_tools
@@ -238,3 +241,58 @@ async def get_item_crafting_recipes_endpoint():
     except Exception as e:
         print(f"Error fetching item crafting recipes: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+# New endpoint to get market listings
+@app.get("/market/listings", response_model=MarketListingsResponse)
+async def get_market_listings():
+    try:
+        listings = await fetch_market_listings()
+        return MarketListingsResponse(listings=listings)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# New endpoint to list an item for selling
+@app.post("/market/list", response_model=ListItemResponse)
+async def list_item_for_sale(
+    request: ListItemRequest,
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        new_listing = await create_market_listing(
+            user=current_user,
+            item_unique_name=request.item_unique_name,
+            quantity=request.quantity,
+            price=request.price,
+            expire_date=request.expire_date
+        )
+        return ListItemResponse(
+            status="success",
+            message="Item listed for sale.",
+            listing_id=new_listing.Id
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+# New endpoint to buy items from the market
+@app.post("/market/buy", response_model=BuyItemResponse)
+async def buy_market_item_endpoint(
+    request: BuyItemRequest,
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        purchase_details = await buy_market_item(
+            buyer=current_user,
+            listing_id=request.listing_id,
+            quantity=request.quantity
+        )
+        return BuyItemResponse(
+            status="success",
+            message="Purchase completed.",
+            total_price=purchase_details['total_price'],
+            item_unique_name=purchase_details['item_unique_name'],
+            item_display_name=purchase_details['item_display_name'],
+            quantity_bought=purchase_details['quantity_bought'],
+            buyer_gold_balance=purchase_details['buyer_gold_balance']
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
