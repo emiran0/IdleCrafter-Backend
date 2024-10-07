@@ -13,5 +13,5 @@ def create_specific_table():
     print("Market table created successfully.")
 
 if __name__ == "__main__":
-    # create_tables()
-    create_specific_table()
+    create_tables()
+    # create_specific_table()

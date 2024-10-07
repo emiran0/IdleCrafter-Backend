@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.exc import NoResultFound
 from typing import List, Dict, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from Database.database import AsyncSessionLocal
 from Database.models import (
     User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe,Market
@@ -245,6 +245,8 @@ async def fetch_market_listings() -> List[MarketListing]:
         listings = result.scalars().all()
         market_listings = []
         for listing in listings:
+            if listing.ExpireDate < datetime.now():
+                continue
             market_listings.append(MarketListing(
                 id=listing.Id,
                 seller_id=str(listing.SellerId),
@@ -257,6 +259,7 @@ async def fetch_market_listings() -> List[MarketListing]:
                 list_created_at=listing.ListCreatedAt,
                 expire_date=listing.ExpireDate
             ))
+            
         return market_listings
 
 # Function to create a market listing
@@ -282,8 +285,8 @@ async def create_market_listing(user: User, item_unique_name: str, quantity: int
                 ItemUniqueName=item_unique_name,
                 Quantity=quantity,
                 Price=price,
-                ListCreatedAt=datetime.utcnow(),
-                ExpireDate=expire_date
+                ListCreatedAt=datetime.now(),
+                ExpireDate=datetime.now() + timedelta(days=3)
             )
             session.add(new_listing)
             await session.commit()

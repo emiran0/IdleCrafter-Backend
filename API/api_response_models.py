@@ -134,3 +134,10 @@ class BuyItemResponse(BaseModel):
     item_display_name: str
     quantity_bought: int
     buyer_gold_balance: float
+
+class CancelListingRequest(BaseModel):
+    listing_id: int
+
+class CancelListingResponse(BaseModel):
+    status: str
+    message: str
