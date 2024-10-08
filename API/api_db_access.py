@@ -246,7 +246,7 @@ async def fetch_market_listings() -> List[MarketListing]:
         market_listings = []
         for listing in listings:
             if listing.ExpireDate < datetime.now():
-                continue
+                await cancel_market_listing(listing.Id, listing.SellerId)
             market_listings.append(MarketListing(
                 id=listing.Id,
                 seller_id=str(listing.SellerId),
@@ -361,6 +361,93 @@ async def buy_market_item(buyer: User, listing_id: int, quantity: int):
                 'quantity_bought': quantity,
                 'buyer_gold_balance': buyer.Gold
             }
+        except Exception as e:
+            await session.rollback()
+            raise e
+        
+# Function to see user's active market listings
+async def fetch_user_market_listings(ListCreator: User) -> List[MarketListing]:
+    async with AsyncSessionLocal() as session:
+        try:
+            result = await session.execute(
+                select(Market)
+                .options(
+                    selectinload(Market.item)
+                )
+                .filter(Market.SellerId == ListCreator.Id)
+                .order_by(Market.ListCreatedAt.desc())
+            )
+            listings = result.scalars().all()
+
+            if not listings:
+                raise Exception("No active listings found.")
+            
+            market_listings = []
+            for listing in listings:
+
+                if listing.ExpireDate < datetime.now():
+                    await cancel_market_listing(listing.Id, ListCreator.Id)
+
+                market_listings.append(MarketListing(
+                    id=listing.Id,
+                    seller_id=str(listing.SellerId),
+                    seller_username=listing.SellerUsername,
+                    item_unique_name=listing.ItemUniqueName,
+                    item_display_name=listing.item.Name,
+                    item_description=listing.item.ItemDescription,
+                    quantity=listing.Quantity,
+                    price=listing.Price,
+                    list_created_at=listing.ListCreatedAt,
+                    expire_date=listing.ExpireDate
+                ))
+                
+            return market_listings
+        
+        except Exception as e:
+            await session.rollback()
+            raise e
+    
+# Function to cancel a market listing
+async def cancel_market_listing(listing_id : int, seller_id : str):
+    async with AsyncSessionLocal() as session:
+        try:
+            # Fetch the listing
+            listing_query = select(Market).filter(
+                Market.Id == listing_id
+            )
+            result = await session.execute(listing_query)
+            listing = result.scalar_one_or_none()
+
+            if not listing:
+                raise Exception("Listing not found.")
+            if listing.SellerId != seller_id:
+                raise Exception("Unauthorized to cancel this listing.")
+            
+            # Return the quantity to the seller's inventory
+            seller_item_query = select(UserItem).filter(
+                UserItem.UserId == listing.SellerId,
+                UserItem.UniqueName == listing.ItemUniqueName
+                )
+            seller_item_result = await session.execute(seller_item_query)
+            seller_item = seller_item_result.scalar_one_or_none()
+
+            if seller_item:
+                seller_item.Quantity += listing.Quantity
+
+            else:
+                seller_item = UserItem(
+                    UserId=listing.SellerId,
+                    Username=listing.SellerUsername,
+                    UniqueName=listing.ItemUniqueName,
+                    Quantity=listing.Quantity
+                )
+                session.add(seller_item)
+
+            # Delete the listing
+            await session.delete(listing)
+            await session.commit()
+            return True
+        
         except Exception as e:
             await session.rollback()
             raise e

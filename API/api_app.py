@@ -54,10 +54,10 @@ async def lifespan(app: FastAPI):
     await asyncio.gather(task1, task2, return_exceptions=True)
 
 # Create the FastAPI app
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="IdleCrafter API", version="1", description="API created for IdleCrafter game")
 
 # Route to obtain JWT token
-@app.post("/token", response_model=Token)
+@app.post("/token", response_model=Token, tags=["Authentication"])
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -71,12 +71,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 # Protected route example
-@app.get("/users/me", response_model=UserResponse)
+@app.get("/users/me", response_model=UserResponse, tags=["Authentication"])
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 # Signup endpoint
-@app.post("/signup", response_model=Token)
+@app.post("/signup", response_model=Token, tags=["Authentication"])
 async def signup(request: SignupRequest):
     try:
         # Convert the request data to a dictionary
@@ -109,7 +109,7 @@ async def signup(request: SignupRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Endpoint to craft a tool
-@app.post("/craft/tool")
+@app.post("/craft/tool", tags=["Crafting"])
 async def craft_tool_endpoint(
     request: CraftToolRequest,
     current_user: User = Depends(get_current_user)
@@ -118,7 +118,7 @@ async def craft_tool_endpoint(
     return result  # Return the success message
     
 # Endpoint to craft an item
-@app.post("/craft/item")
+@app.post("/craft/item", tags=["Crafting"])
 async def craft_item_endpoint(
     request: CraftItemRequest,
     current_user: User = Depends(get_current_user)
@@ -128,7 +128,7 @@ async def craft_item_endpoint(
     return result  # Return the success message
 
 # GET endpoint for user's tools
-@app.get("/user/tools", response_model=UserToolsResponse)
+@app.get("/user/tools", response_model=UserToolsResponse, tags=["Tools"])
 async def get_user_tools(current_user: User = Depends(get_current_user)):
     try:
         user_tools = await fetch_user_tools(current_user.Id)
@@ -168,7 +168,7 @@ async def get_user_tools(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # GET endpoint for user's items
-@app.get("/user/items", response_model=UserItemsResponse)
+@app.get("/user/items", response_model=UserItemsResponse, tags=["Items"])
 async def get_user_items(current_user: User = Depends(get_current_user)):
     try:
         user_items = await fetch_user_items(current_user.Id)
@@ -202,7 +202,7 @@ async def get_user_items(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
     
 # PATCH endpoint to toggle tool enabled status    
-@app.patch("/user/tools/{tool_unique_name}/toggle", response_model=ToolToggleResponse)
+@app.patch("/user/tools/{tool_unique_name}/toggle", response_model=ToolToggleResponse, tags=["Tools"])
 async def toggle_tool_enabled(
     tool_unique_name: str = Path(..., description="Unique name of the tool"),
     current_user: User = Depends(get_current_user)
@@ -223,7 +223,7 @@ async def toggle_tool_enabled(
         raise HTTPException(status_code=500, detail=str(e))
     
 # GET endpoint to fetch tool crafting recipes    
-@app.get("/tool-crafting-recipes", response_model=List[CraftableTool])
+@app.get("/tool-crafting-recipes", response_model=List[CraftableTool], tags=["Crafting"])
 async def get_tool_crafting_recipes(current_user: User = Depends(get_current_user)):
     try:
         recipes = await get_available_tool_crafting_recipes(current_user.Username)
@@ -233,8 +233,8 @@ async def get_tool_crafting_recipes(current_user: User = Depends(get_current_use
         raise HTTPException(status_code=500, detail=str(e))
     
 # GET endpoint to fetch item crafting recipes
-@app.get("/item-crafting-recipes", response_model=List[ToolRecipes])
-async def get_item_crafting_recipes_endpoint():
+@app.get("/item-crafting-recipes", response_model=List[ToolRecipes], tags=["Crafting"])
+async def get_item_crafting_recipes_endpoint(current_user: User = Depends(get_current_user)):
     try:
         recipes = await get_item_crafting_recipes()
         return recipes
@@ -243,8 +243,8 @@ async def get_item_crafting_recipes_endpoint():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 # New endpoint to get market listings
-@app.get("/market/listings", response_model=MarketListingsResponse)
-async def get_market_listings():
+@app.get("/market/listings", response_model=MarketListingsResponse, tags=["Market"])
+async def get_market_listings(current_user: User = Depends(get_current_user)):
     try:
         listings = await fetch_market_listings()
         return MarketListingsResponse(listings=listings)
@@ -252,7 +252,7 @@ async def get_market_listings():
         raise HTTPException(status_code=500, detail=str(e))
 
 # New endpoint to list an item for selling
-@app.post("/market/list", response_model=ListItemResponse)
+@app.post("/market/list", response_model=ListItemResponse, tags=["Market"])
 async def list_item_for_sale(
     request: ListItemRequest,
     current_user: User = Depends(get_current_user)
@@ -274,7 +274,7 @@ async def list_item_for_sale(
         raise HTTPException(status_code=400, detail=str(e))
 
 # New endpoint to buy items from the market
-@app.post("/market/buy", response_model=BuyItemResponse)
+@app.post("/market/buy", response_model=BuyItemResponse, tags=["Market"])
 async def buy_market_item_endpoint(
     request: BuyItemRequest,
     current_user: User = Depends(get_current_user)
@@ -296,3 +296,21 @@ async def buy_market_item_endpoint(
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+# New endpoint to list user's active market listings
+@app.get("/market/my-listings", response_model=MarketListingsResponse, tags=["Market"])
+async def get_user_market_listings(current_user: User = Depends(get_current_user)):
+    try:
+        listings = await fetch_market_listings(seller_id=current_user.Id)
+        return MarketListingsResponse(listings=listings)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
+    
+# New endpoint to cancel a market listing
+
+
+
+# Health check endpoint
+@app.get("/health", tags=["Health"])
+async def health_check():
+    return {"status": "ok"}
