@@ -16,12 +16,12 @@ from .api_response_models import (
     ToolData, ItemData, UserToolsResponse, UserItemsResponse,
     ToolToggleResponse, CraftableTool, RequiredItem, ToolRecipes,
     MarketListingsResponse, ListItemRequest, ListItemResponse,
-    BuyItemRequest, BuyItemResponse
+    BuyItemRequest, BuyItemResponse, CancelListingResponse, CancelListingRequest
 )
 from .api_db_access import (
     fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled,
     get_available_tool_crafting_recipes, get_item_crafting_recipes, fetch_market_listings, 
-    create_market_listing, buy_market_item
+    create_market_listing, buy_market_item, cancel_market_listing, fetch_user_market_listings
 )
 from GenerateData.create_users import create_user, UserAlreadyExistsError
 from GameServer.process_repeating_tools import process_repeating_tools
@@ -301,13 +301,25 @@ async def buy_market_item_endpoint(
 @app.get("/market/my-listings", response_model=MarketListingsResponse, tags=["Market"])
 async def get_user_market_listings(current_user: User = Depends(get_current_user)):
     try:
-        listings = await fetch_market_listings(seller_id=current_user.Id)
+        listings = await fetch_user_market_listings(ListCreator=current_user)
         return MarketListingsResponse(listings=listings)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
     
 # New endpoint to cancel a market listing
-
+@app.delete("/market/my-listings/cancel", tags=["Market"], response_model=CancelListingResponse)
+async def cancel_user_market_listing(
+    request: CancelListingRequest,
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        await cancel_market_listing(
+            seller_id=current_user.Id,
+            listing_id=request.listing_id
+        )
+        return CancelListingResponse(status="success", message=f"Listing {request.listing_id} cancelled.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Health check endpoint
