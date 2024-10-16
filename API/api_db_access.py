@@ -247,18 +247,19 @@ async def fetch_market_listings() -> List[MarketListing]:
         for listing in listings:
             if listing.ExpireDate < datetime.now():
                 await cancel_market_listing(listing.Id, listing.SellerId)
-            market_listings.append(MarketListing(
-                id=listing.Id,
-                seller_id=str(listing.SellerId),
-                seller_username=listing.SellerUsername,
-                item_unique_name=listing.ItemUniqueName,
-                item_display_name=listing.item.Name,
-                item_description=listing.item.ItemDescription,
-                quantity=listing.Quantity,
-                price=listing.Price,
-                list_created_at=listing.ListCreatedAt,
-                expire_date=listing.ExpireDate
-            ))
+            else:
+                market_listings.append(MarketListing(
+                    id=listing.Id,
+                    seller_id=str(listing.SellerId),
+                    seller_username=listing.SellerUsername,
+                    item_unique_name=listing.ItemUniqueName,
+                    item_display_name=listing.item.Name,
+                    item_description=listing.item.ItemDescription,
+                    quantity=listing.Quantity,
+                    price=listing.Price,
+                    list_created_at=listing.ListCreatedAt,
+                    expire_date=listing.ExpireDate
+                ))
             
         return market_listings
 
@@ -448,6 +449,41 @@ async def cancel_market_listing(listing_id : int, seller_id : str):
             await session.commit()
             return True
         
+        except Exception as e:
+            await session.rollback()
+            raise e
+        
+# Function to quick-sell an item for the user
+async def quick_sell_user_item(user: User, item_unique_name: str, quantity: int):
+    async with AsyncSessionLocal() as session:
+        try:
+            # Fetch the user item
+            print(item_unique_name)
+            print(user.Id)
+            print(quantity)
+            user_item_query = select(UserItem).where(
+                UserItem.UserId == user.Id,
+                UserItem.UniqueName == item_unique_name
+            )
+            result = await session.execute(user_item_query)
+            user_item = result.scalar_one_or_none()
+            if not user_item or user_item.Quantity < quantity:
+                raise Exception("Insufficient quantity of item to sell.")
+            # Fetch the item's sell price
+            item_query = select(Item).filter(Item.UniqueName == item_unique_name)
+            item_result = await session.execute(item_query)
+            item = item_result.scalar_one_or_none()
+            if not item:
+                raise Exception("Item not found.")
+            total_price = item.GoldValue * quantity
+            # Deduct the quantity from the user's inventory
+            user_item.Quantity -= quantity
+            session.add(user_item)
+            # Add gold to the user
+            user.Gold += total_price
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
         except Exception as e:
             await session.rollback()
             raise e

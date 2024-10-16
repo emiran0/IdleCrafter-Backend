@@ -16,12 +16,14 @@ from .api_response_models import (
     ToolData, ItemData, UserToolsResponse, UserItemsResponse,
     ToolToggleResponse, CraftableTool, RequiredItem, ToolRecipes,
     MarketListingsResponse, ListItemRequest, ListItemResponse,
-    BuyItemRequest, BuyItemResponse, CancelListingResponse, CancelListingRequest
+    BuyItemRequest, BuyItemResponse, CancelListingResponse, CancelListingRequest,
+    ItemQuickSellRequest
 )
 from .api_db_access import (
     fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled,
     get_available_tool_crafting_recipes, get_item_crafting_recipes, fetch_market_listings, 
-    create_market_listing, buy_market_item, cancel_market_listing, fetch_user_market_listings
+    create_market_listing, buy_market_item, cancel_market_listing, fetch_user_market_listings,
+    quick_sell_user_item
 )
 from GenerateData.create_users import create_user, UserAlreadyExistsError
 from GameServer.process_repeating_tools import process_repeating_tools
@@ -182,7 +184,8 @@ async def get_user_items(current_user: User = Depends(get_current_user)):
             item_data = ItemData(
                 item_unique_name=item.UniqueName,
                 item_quantity=user_item.Quantity,
-                item_display_name=item.Name
+                item_display_name=item.Name,
+                item_gold_value=item.GoldValue
             )
 
             if category not in items_by_category:
@@ -201,6 +204,20 @@ async def get_user_items(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.post("/user/items/quick-sell", tags=["Items"])
+async def quick_sell_item(
+    request: ItemQuickSellRequest,
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        # Call the database access function to quick sell the item
+        await quick_sell_user_item(current_user, request.item_unique_name, request.item_quantity)
+        return {"status": "success", "message": f"Item {request.item_unique_name} quick-sold."}
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Item not found for user")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # PATCH endpoint to toggle tool enabled status    
 @app.patch("/user/tools/{tool_unique_name}/toggle", response_model=ToolToggleResponse, tags=["Tools"])
 async def toggle_tool_enabled(

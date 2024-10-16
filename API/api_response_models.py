@@ -139,6 +139,20 @@ class ItemData(BaseModel):
     item_unique_name: str
     item_quantity: int
     item_display_name: str
+    item_gold_value: float
+
+class ItemQuickSellRequest(BaseModel):
+    """
+    The request information body of the main item, with only the necessary information for quick sell.
+
+    :param item_unique_name: Unique name of the item
+    :type item_unique_name: str
+    :param item_quantity: Quantity of the item
+    :type item_quantity: int
+    """
+
+    item_unique_name: str
+    item_quantity: int
 
 # Response model for user's items
 class UserItemsResponse(BaseModel):
