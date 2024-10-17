@@ -26,6 +26,8 @@ class User(Base):
     items = relationship('UserItem', back_populates='user')
     tools = relationship('UserTool', back_populates='user')
     market_listings = relationship('Market', back_populates='seller', cascade='all, delete-orphan')
+    purchases = relationship('MarketHistory', back_populates='buyer', foreign_keys='MarketHistory.BuyerId', cascade='all, delete-orphan')
+    sales = relationship('MarketHistory', back_populates='seller', foreign_keys='MarketHistory.SellerId', cascade='all, delete-orphan')
 
 class Item(Base):
     __tablename__ = 'items'
@@ -69,6 +71,8 @@ class Item(Base):
         foreign_keys='UserTool.OngoingCraftingItemUniqueName'
     )
     market_listings = relationship('Market', back_populates='item', cascade='all, delete-orphan')
+    market_listings = relationship('Market', back_populates='item', cascade='all, delete-orphan')
+    market_histories = relationship('MarketHistory', back_populates='item', cascade='all, delete-orphan')
 
 class Tool(Base):
     __tablename__ = 'tools'
@@ -269,3 +273,23 @@ class Market(Base):
     # Relationships
     seller = relationship('User', back_populates='market_listings')
     item = relationship('Item', back_populates='market_listings')
+    seller = relationship('User', back_populates='market_listings')
+    item = relationship('Item', back_populates='market_listings')
+
+class MarketHistory(Base):
+    __tablename__ = 'market_history'
+
+    Id = Column(Integer, primary_key=True, index=True)
+    ItemUniqueName = Column(String, ForeignKey('items.UniqueName'), nullable=False)
+    Quantity = Column(Integer, nullable=False)
+    Price = Column(Float, nullable=False)
+    SellerId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
+    SellerUsername = Column(String, nullable=False)
+    BuyerId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
+    BuyerUsername = Column(String, nullable=False)
+    BuyingDate = Column(DateTime, default=datetime.now(), nullable=False)
+
+    # Relationships
+    item = relationship('Item', back_populates='market_histories')
+    buyer = relationship('User', back_populates='purchases', foreign_keys=[BuyerId])
+    seller = relationship('User', back_populates='sales', foreign_keys=[SellerId])

@@ -1,9 +1,9 @@
 # API/api_app.py
 
-from fastapi import FastAPI, Depends, HTTPException, status, Path
+from fastapi import FastAPI, Depends, HTTPException, status, Path, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from .auth import authenticate_user, create_access_token, get_current_user
-from datetime import timedelta
+from datetime import timedelta, datetime
 import asyncio
 from contextlib import asynccontextmanager
 from sqlalchemy.exc import IntegrityError, NoResultFound
@@ -17,13 +17,13 @@ from .api_response_models import (
     ToolToggleResponse, CraftableTool, RequiredItem, ToolRecipes,
     MarketListingsResponse, ListItemRequest, ListItemResponse,
     BuyItemRequest, BuyItemResponse, CancelListingResponse, CancelListingRequest,
-    ItemQuickSellRequest
+    ItemQuickSellRequest, TransactionHistoryResponse, TransactionHistoryItem
 )
 from .api_db_access import (
     fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled,
     get_available_tool_crafting_recipes, get_item_crafting_recipes, fetch_market_listings, 
     create_market_listing, buy_market_item, cancel_market_listing, fetch_user_market_listings,
-    quick_sell_user_item
+    quick_sell_user_item, get_transaction_history
 )
 from GenerateData.create_users import create_user, UserAlreadyExistsError
 from GameServer.process_repeating_tools import process_repeating_tools
@@ -337,6 +337,43 @@ async def cancel_user_market_listing(
         return CancelListingResponse(status="success", message=f"Listing {request.listing_id} cancelled.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/market/transactions", response_model=TransactionHistoryResponse, tags=["Market"])
+async def get_transaction_history_endpoint(
+    start_date: datetime = Query(..., description="Start date in ISO format"),
+    end_date: datetime = Query(..., description="End date in ISO format"),
+    item_unique_name: str = Query(..., description="Unique name of the item"),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        # Validate that start_date is not after end_date
+        if start_date > end_date:
+            raise HTTPException(status_code=400, detail="start_date must be before or equal to end_date")
+        
+        # Fetch transaction history
+        transactions = await get_transaction_history(
+            start_date=start_date,
+            end_date=end_date,
+            item_unique_name=item_unique_name
+        )
+
+        transaction_items = [
+            TransactionHistoryItem(
+                item_unique_name=tx.ItemUniqueName,
+                transaction_date=tx.BuyingDate,
+                quantity=tx.Quantity,
+                price=tx.Price
+            )
+            for tx in transactions
+        ]
+
+        return TransactionHistoryResponse(transactions=transaction_items)
+
+    except HTTPException as e:
+        raise e  # Re-raise HTTP exceptions
+    except Exception as e:
+        print(f"Error fetching transaction history: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Health check endpoint

@@ -8,9 +8,10 @@ from typing import List, Dict, Optional
 from datetime import datetime, timedelta
 from Database.database import AsyncSessionLocal
 from Database.models import (
-    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe,Market
+    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory
 )
-from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing
+from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing, TransactionHistoryResponse
+
 
 
 # Function to get user tools
@@ -347,6 +348,17 @@ async def buy_market_item(buyer: User, listing_id: int, quantity: int):
                     Quantity=quantity
                 )
                 session.add(buyer_item)
+
+            # Save the transaction to market history
+            await save_market_transaction(
+                buyer_id=buyer.Id,
+                seller_id=listing.SellerId,
+                buyer_username=buyer.Username, 
+                seller_username=listing.SellerUsername, 
+                item_unique_name=listing.ItemUniqueName, 
+                quantity=quantity, price=total_price
+                )
+            
             # Deduct quantity from listing
             listing.Quantity -= quantity
             if listing.Quantity == 0:
@@ -364,6 +376,54 @@ async def buy_market_item(buyer: User, listing_id: int, quantity: int):
             }
         except Exception as e:
             await session.rollback()
+            raise e
+        
+# Function to save the transaction to market history
+async def save_market_transaction(
+        buyer_id: str, seller_id: str, buyer_username: str, 
+        seller_username : str, item_unique_name: str,
+        quantity: int, price: float
+        ):
+    async with AsyncSessionLocal() as session:
+        try:
+            new_transaction = MarketHistory(
+                BuyerId=buyer_id,
+                BuyerUsername=buyer_username,
+                SellerId=seller_id,
+                SellerUsername=seller_username,
+                ItemUniqueName=item_unique_name,
+                Quantity=quantity,
+                Price=price,
+                BuyingDate=datetime.now()
+            )
+            session.add(new_transaction)
+            await session.commit()
+            await session.refresh(new_transaction)
+            return new_transaction
+        except Exception as e:
+            await session.rollback()
+            raise e
+        
+# Function to get transaction history
+async def get_transaction_history(
+    start_date: datetime,
+    end_date: datetime,
+    item_unique_name: str
+) -> List[MarketHistory]:
+    async with AsyncSessionLocal() as session:
+        try:
+            query = select(MarketHistory).filter(
+                    MarketHistory.BuyingDate >= start_date,
+                    MarketHistory.BuyingDate <= end_date,
+                    MarketHistory.ItemUniqueName == item_unique_name
+            ).order_by(MarketHistory.BuyingDate)
+
+            result = await session.execute(query)
+            transactions = result.scalars().all()
+            return transactions
+
+        except Exception as e:
+            print(f"Error fetching transaction history: {e}")
             raise e
         
 # Function to see user's active market listings
@@ -487,3 +547,4 @@ async def quick_sell_user_item(user: User, item_unique_name: str, quantity: int)
         except Exception as e:
             await session.rollback()
             raise e
+        

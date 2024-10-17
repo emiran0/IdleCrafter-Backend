@@ -408,3 +408,32 @@ class CancelListingResponse(BaseModel):
 
     status: str
     message: str
+
+class TransactionHistoryItem(BaseModel):
+    """
+    Model for a single transaction history item.
+
+    :param item_unique_name: Unique name of the item
+    :type item_unique_name: str
+    :param transaction_date: Transaction date
+    :type transaction_date: datetime
+    :param quantity: Quantity of the item
+    :type quantity: int
+    :param price: Price of the item
+    :type price: float
+    """
+
+    item_unique_name: str
+    transaction_date: datetime
+    quantity: int
+    price: float
+
+class TransactionHistoryResponse(BaseModel):
+    """
+    Response model for transaction history.
+
+    :param transactions: List of transaction history items
+    :type transactions: List[TransactionHistoryItem]
+    """
+
+    transactions: List[TransactionHistoryItem]
