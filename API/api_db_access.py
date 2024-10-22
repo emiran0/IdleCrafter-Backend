@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.exc import NoResultFound
 from typing import List, Dict, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from Database.database import AsyncSessionLocal
 from Database.models import (
     User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory
