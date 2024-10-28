@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -72,3 +72,27 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         if user is None:
             raise credentials_exception
         return user
+    
+# Dependency to get the current user from the websocket
+async def get_current_user_websocket(websocket: WebSocket):
+    auth_header = websocket.headers.get("Authorization")
+    if auth_header is None or not auth_header.startswith("Bearer "):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return None
+    token = auth_header[len("Bearer "):]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return None
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(select(User).filter(User.Username == username))
+            user = result.scalar_one_or_none()
+            if user is None:
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+                return None
+            return user
+    except JWTError:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return None

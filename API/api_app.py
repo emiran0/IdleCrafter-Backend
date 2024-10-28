@@ -1,9 +1,9 @@
 # API/api_app.py
 
-from fastapi import FastAPI, Depends, HTTPException, status, Path, Query
+from fastapi import FastAPI, Depends, HTTPException, status, Path, Query, WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordRequestForm
-from .auth import authenticate_user, create_access_token, get_current_user
-from datetime import timedelta, datetime
+from .auth import authenticate_user, create_access_token, get_current_user, get_current_user_websocket
+from datetime import timedelta, datetime, timezone
 import asyncio
 from contextlib import asynccontextmanager
 from sqlalchemy.exc import IntegrityError, NoResultFound
@@ -23,7 +23,7 @@ from .api_db_access import (
     fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled,
     get_available_tool_crafting_recipes, get_item_crafting_recipes, fetch_market_listings, 
     create_market_listing, buy_market_item, cancel_market_listing, fetch_user_market_listings,
-    quick_sell_user_item, get_transaction_history
+    quick_sell_user_item, get_transaction_history, save_chat_message
 )
 from GenerateData.create_users import create_user, UserAlreadyExistsError
 from GameServer.process_repeating_tools import process_repeating_tools
@@ -374,6 +374,56 @@ async def get_transaction_history_endpoint(
     except Exception as e:
         print(f"Error fetching transaction history: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+    
+# Manage connected clients
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            await connection.send_json(message)
+
+manager = ConnectionManager()
+
+# WebSocket endpoint
+@app.websocket("/ws/chat")
+async def websocket_endpoint(websocket: WebSocket):
+    # Authenticate the user
+    user = await get_current_user_websocket(websocket)
+    if not user:
+        await websocket.close()
+        return
+
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            message_text = data.get("text")
+            if not message_text:
+                continue  # Ignore empty messages
+
+            # Save the message using the new function
+            chat_message = await save_chat_message(user.Id, user.Username, message_text)
+
+            # Prepare the message to broadcast
+            message = {
+                "time": chat_message.Time.isoformat(timespec='seconds'),
+                "username": user.Username,
+                "level": user.TotalLevel,
+                "text": message_text
+            }
+            # Broadcast the message to all connected clients
+            await manager.broadcast(message)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 
 # Health check endpoint

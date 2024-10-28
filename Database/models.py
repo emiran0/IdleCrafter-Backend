@@ -2,11 +2,11 @@
 
 from sqlalchemy import (
     Column, Integer, String, ForeignKey, Float, DateTime, Boolean,
-    ForeignKeyConstraint, UniqueConstraint, and_
+    ForeignKeyConstraint, UniqueConstraint, and_, Text
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
-from datetime import datetime
+from datetime import datetime, timezone
 from Database.database import Base
 import uuid
 
@@ -28,6 +28,7 @@ class User(Base):
     market_listings = relationship('Market', back_populates='seller', cascade='all, delete-orphan')
     purchases = relationship('MarketHistory', back_populates='buyer', foreign_keys='MarketHistory.BuyerId', cascade='all, delete-orphan')
     sales = relationship('MarketHistory', back_populates='seller', foreign_keys='MarketHistory.SellerId', cascade='all, delete-orphan')
+    chat_messages = relationship('ChatHistory', back_populates='user', cascade='all, delete-orphan')
 
 class Item(Base):
     __tablename__ = 'items'
@@ -293,3 +294,15 @@ class MarketHistory(Base):
     item = relationship('Item', back_populates='market_histories')
     buyer = relationship('User', back_populates='purchases', foreign_keys=[BuyerId])
     seller = relationship('User', back_populates='sales', foreign_keys=[SellerId])
+
+class ChatHistory(Base):
+    __tablename__ = 'chat_history'
+
+    Id = Column(Integer, primary_key=True, index=True)
+    UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
+    Username = Column(String, nullable=False)
+    Text = Column(Text, nullable=False)
+    Time = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship('User', back_populates='chat_messages')

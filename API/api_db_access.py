@@ -6,9 +6,10 @@ from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.exc import NoResultFound
 from typing import List, Dict, Optional
 from datetime import datetime, timedelta, timezone
+import uuid
 from Database.database import AsyncSessionLocal
 from Database.models import (
-    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory
+    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory, ChatHistory
 )
 from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing, TransactionHistoryResponse
 
@@ -548,3 +549,16 @@ async def quick_sell_user_item(user: User, item_unique_name: str, quantity: int)
             await session.rollback()
             raise e
         
+# Function to save chat message from user         
+async def save_chat_message(user_id: uuid.UUID, username: str, message_text: str) -> ChatHistory:
+    async with AsyncSessionLocal() as session:
+        chat_message = ChatHistory(
+            UserId=user_id,
+            Username=username,
+            Text=message_text,
+            Time=datetime.now(timezone.utc).replace(tzinfo=None)
+        )
+        session.add(chat_message)
+        await session.commit()
+        await session.refresh(chat_message)
+        return chat_message

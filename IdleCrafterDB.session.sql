@@ -1,1 +1,1 @@
-UPDATE user_items SET "Quantity" = 1110 WHERE "UniqueName" = 'mining_iron_ore' AND "Username" = 'efe.kartal';
+DROP TABLE chat_history;
