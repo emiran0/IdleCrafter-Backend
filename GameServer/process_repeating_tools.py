@@ -54,7 +54,6 @@ def process_repeating_tools():
                     # Deduct resource
                     user_resource.Quantity -= resource_quantity
                     db.add(user_resource)
-                    print(f"Deducted {resource_quantity} x '{resource_unique_name}' from user '{user.Username}'.")
 
                 # Probability check
                 probability = (item.Probability or 1.0) * (tool.ProbabilityBoost or 1.0)

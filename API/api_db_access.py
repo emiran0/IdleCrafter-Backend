@@ -12,6 +12,7 @@ from Database.models import (
     User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory, ChatHistory
 )
 from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing, TransactionHistoryResponse
+from collections import Counter
 
 
 
@@ -92,7 +93,8 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
                 raise Exception(f"User '{user_identifier}' not found.")
 
             # Get the set of (ToolUniqueName, Tier) tuples the user already has
-            user_tools_set = {(user_tool.ToolUniqueName, user_tool.Tier) for user_tool in user.tools}
+            tool_counter = Counter(user_tool.ToolUniqueName for user_tool in user.tools)
+            user_tools_set = {(user_tool.ToolUniqueName, user_tool.Tier, tool_counter[user_tool.ToolUniqueName]) for user_tool in user.tools}
 
             # Fetch all unique tools that can be crafted (from ToolCraftingRecipe)
             recipes_query = select(
@@ -105,9 +107,6 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
             response = []
 
             for output_tool_unique_name, output_tool_tier in all_craftable_tools:
-                if (output_tool_unique_name, output_tool_tier) in user_tools_set:
-                    # User already has this tool and tier, skip it
-                    continue
 
                 # Fetch the Tool object to get display_name
                 tool_query = select(Tool).where(
@@ -118,6 +117,14 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
                 tool = tool_result.scalar_one_or_none()
                 if not tool:
                     continue  # Tool not found, skip or handle accordingly
+
+                if not tool.isMultipleCraftable:
+                    if (output_tool_unique_name, output_tool_tier, 1) in user_tools_set:
+                    # User already has this tool and tier, skip it
+                        continue
+                else:
+                    if (output_tool_unique_name, output_tool_tier, tool.maxCraftingNumber) in user_tools_set:
+                        continue
 
                 # Fetch required items for this tool
                 required_items_query = select(ToolCraftingRecipe).where(
