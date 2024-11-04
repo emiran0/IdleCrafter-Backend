@@ -7,8 +7,9 @@ mining_furnace,Furnace,Mining,False,1,Used to smelt ores into metals.,,1,False,1
 mining_furnace,Furnace,Mining,False,1.2,Used to smelt ores into metals.,,2,False,1
 mining_furnace,Furnace,Mining,False,1.5,Used to smelt ores into metals.,,3,False,1
 mining_oil_extractor,Oil Extractor,Mining,True,1,Used to extract oil from the ground.,400,1,False,1
-mining_oil_extractor,Oil Extractor,Mining,True,1.2,Used to extract oil from the ground.,800,2,False,1
-mining_oil_extractor,Oil Extractor,Mining,True,1.5,Used to extract oil from the ground.,2000,3,False,1
+mining_oil_extractor,Oil Extractor,Mining,True,1.2,Used to extract oil from the ground.,1200,2,False,1
+mining_oil_extractor,Oil Extractor,Mining,True,1.5,Used to extract oil from the ground.,4000,3,False,1
+mining_oil_factory,Oil Factory,Mining,True,1,Used to hire oil extractor workers.,,1,False,1
 mining_oil_silo,Oil Silo,Mining,False,1,Used to store oil.,1000,1,False,1
 mining_drill,Drill,Mining,True,1,Used to drill into the ground.,,1,True,3
 mining_excavator,Excavator,Mining,True,1,Used to excavate the ground.,,1,True,3

@@ -209,6 +209,7 @@ class CraftableTool(BaseModel):
 
     unique_tool_name: str
     display_name: str
+    tier: int
     required_items: List[RequiredItem]
 
 class InputItem(BaseModel):

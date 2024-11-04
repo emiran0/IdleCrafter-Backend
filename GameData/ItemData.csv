@@ -6,7 +6,7 @@ mining_silver,Silver,Mining,20,0.04,False,False,The metal of the moon-used for m
 mining_gold,Gold,Mining,50,0.02,False,False,The metal of the sun-used for many things.
 mining_titanium,Titanium,Mining,200,0.002,False,False,The strongest metal that can be found.
 mining_emerald,Emerald,Mining,1000,0.0005,True,False,A rare gemstone-used for special things.
-mining_diamond,Diamond,Mining,10000,0.0001,True,False,Very rare gemstone-used for boost and enchantments.
+mining_diamond,Diamond,Mining,10000,0.00002,True,False,Very rare gemstone-used for boost and enchantments.
 mining_copper_ore,Copper Ore,Mining,8,1.0,False,True,Smelted into copper.
 mining_iron_ore,Iron Ore,Mining,20,1.0,False,True,Smelted into iron.
 mining_silver_ore,Silver Ore,Mining,50,1.0,False,True,Smelted into silver.

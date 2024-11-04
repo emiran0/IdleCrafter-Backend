@@ -1,1 +1,1 @@
-DROP TABLE chat_history;
+DROP TABLE tool_crafting_recipes;

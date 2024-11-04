@@ -3,12 +3,15 @@ mining_pickaxe,1,mining_stone,,,1
 mining_pickaxe,1,mining_copper,,,1
 mining_pickaxe,1,mining_iron,,,1
 mining_oil_extractor,1,mining_oil,,,2
-mining_drill,1,mining_stone,mining_oil,1,1
+mining_oil_extractor,2,mining_oil,,,10
+mining_oil_extractor,3,mining_oil,,,24
+mining_drill,1,mining_stone,mining_oil,1,2
 mining_drill,1,mining_copper,mining_oil,,1
 mining_drill,1,mining_iron,mining_oil,,1
 mining_drill,1,mining_silver,mining_oil,,1
 mining_drill,1,mining_gold,mining_oil,,1
 mining_drill,1,mining_emerald,mining_oil,,1
+mining_drill,1,mining_diamond,mining_oil,,1
 farming_rake,1,farming_moonberry_seed,,,1
 farming_rake,1,farming_sungrain_seed,,,1
 farming_rake,1,farming_fireleaf_seed,,,1

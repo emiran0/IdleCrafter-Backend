@@ -92,44 +92,74 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
             if not user:
                 raise Exception(f"User '{user_identifier}' not found.")
 
-            # Get the set of (ToolUniqueName, Tier) tuples the user already has
-            tool_counter = Counter(user_tool.ToolUniqueName for user_tool in user.tools)
-            user_tools_set = {(user_tool.ToolUniqueName, user_tool.Tier, tool_counter[user_tool.ToolUniqueName]) for user_tool in user.tools}
+            # Build a mapping from (ToolUniqueName, Tier) to count
+            tool_counter = Counter((user_tool.ToolUniqueName, user_tool.Tier) for user_tool in user.tools)
 
-            # Fetch all unique tools that can be crafted (from ToolCraftingRecipe)
-            recipes_query = select(
-                ToolCraftingRecipe.OutputToolUniqueName,
-                ToolCraftingRecipe.OutputToolTier
-            ).distinct()
-            recipes_result = await session.execute(recipes_query)
-            all_craftable_tools = recipes_result.fetchall()
+            # Fetch all unique OutputToolUniqueNames from ToolCraftingRecipe
+            all_tools_query = select(ToolCraftingRecipe.OutputToolUniqueName).distinct()
+            all_tools_result = await session.execute(all_tools_query)
+            all_tool_unique_names = [row[0] for row in all_tools_result.fetchall()]
 
             response = []
 
-            for output_tool_unique_name, output_tool_tier in all_craftable_tools:
+            for tool_unique_name in all_tool_unique_names:
+                # Fetch all available tiers for this tool
+                tiers_query = select(ToolCraftingRecipe.OutputToolTier).where(
+                    ToolCraftingRecipe.OutputToolUniqueName == tool_unique_name
+                ).distinct()
+                tiers_result = await session.execute(tiers_query)
+                available_tiers = sorted([row[0] for row in tiers_result.fetchall()])
 
-                # Fetch the Tool object to get display_name
-                tool_query = select(Tool).where(
-                    Tool.UniqueName == output_tool_unique_name,
-                    Tool.Tier == output_tool_tier
+                # Fetch all Tool entries for this tool_unique_name
+                tool_entries_query = select(Tool).where(
+                    Tool.UniqueName == tool_unique_name
                 )
-                tool_result = await session.execute(tool_query)
-                tool = tool_result.scalar_one_or_none()
-                if not tool:
-                    continue  # Tool not found, skip or handle accordingly
+                tool_entries_result = await session.execute(tool_entries_query)
+                tool_entries = tool_entries_result.scalars().all()
 
-                if not tool.isMultipleCraftable:
-                    if (output_tool_unique_name, output_tool_tier, 1) in user_tools_set:
-                    # User already has this tool and tier, skip it
-                        continue
-                else:
-                    if (output_tool_unique_name, output_tool_tier, tool.maxCraftingNumber) in user_tools_set:
-                        continue
+                # Build a mapping of tier to Tool object
+                tier_to_tool = {tool.Tier: tool for tool in tool_entries}
 
-                # Fetch required items for this tool
+                # Build a mapping of tier to user's count at that tier
+                user_tool_counts = {tier: count for ((name, tier), count) in tool_counter.items() if name == tool_unique_name}
+
+                # Iterate over available tiers
+                next_tier = None
+                for tier in available_tiers:
+                    tool = tier_to_tool.get(tier)
+                    if not tool:
+                        continue  # Tool not found, skip
+
+                    is_multiple_craftable = tool.isMultipleCraftable
+                    max_crafting_number = tool.maxCraftingNumber
+
+                    user_count_at_tier = user_tool_counts.get(tier, 0)
+
+                    if is_multiple_craftable:
+                        if user_count_at_tier < max_crafting_number:
+                            # User can craft more at this tier
+                            next_tier = tier
+                            break  # Found the next tier to craft
+                        else:
+                            # User has reached max crafting number at this tier, check next tier
+                            continue
+                    else:
+                        if user_count_at_tier == 0:
+                            # User doesn't have this tool at this tier
+                            next_tier = tier
+                            break  # Found the next tier to craft
+                        else:
+                            # User has the tool at this tier, check next tier
+                            continue
+
+                if next_tier is None:
+                    # No tiers left to consider for this tool
+                    continue  # Skip to next tool
+
+                # Fetch required items for this tool at next_tier
                 required_items_query = select(ToolCraftingRecipe).where(
-                    ToolCraftingRecipe.OutputToolUniqueName == output_tool_unique_name,
-                    ToolCraftingRecipe.OutputToolTier == output_tool_tier
+                    ToolCraftingRecipe.OutputToolUniqueName == tool_unique_name,
+                    ToolCraftingRecipe.OutputToolTier == next_tier
                 ).options(
                     selectinload(ToolCraftingRecipe.input_item)
                 )
@@ -138,15 +168,9 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
 
                 required_items_list = []
                 for recipe in required_recipes:
-                    # Fetch the input_item if not already loaded
                     input_item = recipe.input_item
                     if not input_item:
-                        # Fetch the Item object
-                        item_query = select(Item).where(Item.UniqueName == recipe.InputItemUniqueName)
-                        item_result = await session.execute(item_query)
-                        input_item = item_result.scalar_one_or_none()
-                        if not input_item:
-                            continue  # Input item not found, skip or handle accordingly
+                        continue  # Input item not found, skip
 
                     required_items_list.append(RequiredItem(
                         item_unique_name=recipe.InputItemUniqueName,
@@ -154,11 +178,16 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
                         required_quantity=recipe.InputQuantity
                     ))
 
+                # Create the CraftableTool object including the tier
                 response.append(CraftableTool(
-                    unique_tool_name=output_tool_unique_name,
+                    unique_tool_name=tool_unique_name,
                     display_name=tool.Name,
+                    tier=next_tier,
                     required_items=required_items_list
                 ))
+
+            # Sort the response by tier in ascending order
+            response.sort(key=lambda x: x.tier)
 
             return response
 

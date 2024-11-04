@@ -58,3 +58,6 @@ def main_tool_crafting_recipes():
     csv_file_path = 'GameData/ToolCraftingRecipesData.csv'  # Adjust the path if necessary
     create_tool_crafting_recipes_from_csv(csv_file_path)
     print("ToolCraftingRecipe creation complete.")
+
+if __name__ == "__main__":
+    main_tool_crafting_recipes()
