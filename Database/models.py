@@ -29,6 +29,7 @@ class User(Base):
     purchases = relationship('MarketHistory', back_populates='buyer', foreign_keys='MarketHistory.BuyerId', cascade='all, delete-orphan')
     sales = relationship('MarketHistory', back_populates='seller', foreign_keys='MarketHistory.SellerId', cascade='all, delete-orphan')
     chat_messages = relationship('ChatHistory', back_populates='user', cascade='all, delete-orphan')
+    category_xp = relationship('UserCategoryXP', back_populates='user', cascade='all, delete-orphan')
 
 class Item(Base):
     __tablename__ = 'items'
@@ -302,7 +303,28 @@ class ChatHistory(Base):
     UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
     Username = Column(String, nullable=False)
     Text = Column(Text, nullable=False)
-    Time = Column(DateTime, default=datetime.utcnow, nullable=False)
+    Time = Column(DateTime, default=datetime.now(), nullable=False)
 
     # Relationships
     user = relationship('User', back_populates='chat_messages')
+
+class CategoryLevels(Base):
+    __tablename__ = 'category_levels'
+
+    Id = Column(Integer, primary_key=True, index=True)
+    Category = Column(String, nullable=False)
+    Level = Column(Integer, nullable=False)
+    StartingXp = Column(Integer, nullable=False)
+
+class UserCategoryXP(Base):
+    __tablename__ = 'user_category_xp'
+
+    Id = Column(Integer, primary_key=True, index=True)
+    UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
+    Username = Column(String, nullable=False)
+    Category = Column(String, nullable=False)
+    CurrentXP = Column(Integer, nullable=False)
+    LastUpdated = Column(DateTime, default=datetime.now(), nullable=False)
+
+    # Relationships
+    user = relationship('User', back_populates='category_xp')
