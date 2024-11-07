@@ -43,6 +43,7 @@ class Item(Base):
     isLegendary = Column(Boolean, default=False)
     isCraftable = Column(Boolean, default=False, nullable=True)
     ItemDescription = Column(String, nullable=True)
+    XPYield = Column(Integer, default=1, nullable=True)
 
     # Relationships
     user_items = relationship('UserItem', back_populates='item')

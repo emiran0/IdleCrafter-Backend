@@ -1,39 +1,39 @@
-﻿UniqueName,Name,Category,GoldValue,Probability,isLegendary,isCraftable,ItemDescription
-mining_stone,Stone,Mining,1,0.5,False,False,Commonly found in the ground-boring stone we know.
-mining_copper,Copper,Mining,4,0.25,False,False,The classic metal-used for many things.
-mining_iron,Iron,Mining,10,0.1,False,False,The most common metal-used for many things.
-mining_silver,Silver,Mining,20,0.04,False,False,The metal of the moon-used for many things.
-mining_gold,Gold,Mining,50,0.02,False,False,The metal of the sun-used for many things.
-mining_titanium,Titanium,Mining,200,0.002,False,False,The strongest metal that can be found.
-mining_emerald,Emerald,Mining,1000,0.0005,True,False,A rare gemstone-used for special things.
-mining_diamond,Diamond,Mining,10000,0.00002,True,False,Very rare gemstone-used for boost and enchantments.
-mining_copper_ore,Copper Ore,Mining,8,1.0,False,True,Smelted into copper.
-mining_iron_ore,Iron Ore,Mining,20,1.0,False,True,Smelted into iron.
-mining_silver_ore,Silver Ore,Mining,50,1.0,False,True,Smelted into silver.
-mining_gold_ore,Gold Ore,Mining,150,1.0,False,True,Smelted into gold.
-mining_titanium_ore,Titanium Ore,Mining,1500,1.0,False,True, The usable format of the titanium.
-mining_oil,Oil,Mining,0.0,1.0,False,False,Black gold-used for many things.
-farming_moonberry_seed,Moonberry Seed,Farming,0.0,0.08,False,False, A seed which commonly can be found.
-farming_sungrain_seed,Sungrain Seed,Farming,0.0,0.04,False,False,A seed which ocassionally can be found.
-farming_fireleaf_seed,Fireleaf Seed,Farming,0.0,0.01,False,False,A seed which rarely can be found.
-farming_aquasprout_seed,Aquasproud Seed,Farming,0.0,0.005,False,False,A seed which very rarely can be found.
-farming_nightshade_seed,Nightshade Seed,Farming,0.0,0.001,False,False,A seed which almost never can be found.
-farming_lunar_berries,Lunar Berries,Farming,0.0,1.0,False,True,Used for special things.
-farming_golden_sheaf,Golden Sheaf,Farming,0.0,1.0,False,True,Used for special things.
-farming_blazeboom,Blazeboom,Farming,0.0,1.0,False,True,Used for special things.
-farming_tidefruits,Tidefruits,Farming,0.0,,False,True,Used for special things.
-farming_midnight_petals,Midnight Petals,Farming,,1.0,False,True,Used for special things.
-woodcutting_oak_tree,Oak Tree,Woodcutting,0.0,0.01,False,False,A common tree-used for many things.
-woodcutting_pine_tree,Pine Tree,Woodcutting,0.0,0.005,False,False,A tree which grows in colder climates-used for many things.
-woodcutting_maple_tree,Maple Tree,Woodcutting,0.0,0.0005,False,False,A tree which grows in colder climates-used for many things.
-woodcutting_oak_logs,Oak Logs,Woodcutting,10,1.0,False,True,Used for many things.
-woodcutting_pine_logs,Pine Logs,Woodcutting,30,1.0,False,True,Used for many things.
-woodcutting_maple_logs,Maple Logs,Woodcutting,100,1.0,False,True,Used for many things.
-alchemy_enhanced_yield,Enhanced Yield Potion,Alchemy,0.0,1.0,False,True,Increases the harvested crops by 20%.
-alchemy_miners_brew,Miner's Brew,Alchemy,0.0,1.0,False,True,Boosts mining speed by 15% for a limited time.
-alchemy_lumberjacks_strength,Lumberjack's Strength Potion,Alchemy,0.0,1.0,False,True,Increases the amount of logs obtained per tree by 25%.
-alchemy_fishermans_elixir,Fisherman’s Elixir,Alchemy,0.0,1.0,False,True,Enhances the chance of catching rarer fish by 30%.
-alchemy_smelters_draught,Smelter's Draught,Alchemy,0.0,1.0,False,True,Increases the amount of metal obtained per ore by 20%.
-fishing_trout,Trout,Fishing,10,0.01,False,False,A common fish-used for many things.
-fishing_salmon,Salmon,Fishing,30,0.002,False,False,A fish which swims in colder waters-used for many things.
-fishing_tuna,Tuna,Fishing,100,0.0005,False,False,A fish which swims in warmer waters-used for many things.
+﻿UniqueName,Name,Category,GoldValue,Probability,isLegendary,isCraftable,ItemDescription,XPYield
+mining_stone,Stone,Mining,1,0.5,False,False,Commonly found in the ground-boring stone we know.,1
+mining_copper,Copper,Mining,4,0.25,False,False,The classic metal-used for many things.,4
+mining_iron,Iron,Mining,10,0.1,False,False,The most common metal-used for many things.,10
+mining_silver,Silver,Mining,20,0.04,False,False,The metal of the moon-used for many things.,20
+mining_gold,Gold,Mining,50,0.02,False,False,The metal of the sun-used for many things.,50
+mining_titanium,Titanium,Mining,200,0.002,False,False,The strongest metal that can be found.,500
+mining_emerald,Emerald,Mining,1000,0.0005,True,False,A rare gemstone-used for special things.,1000
+mining_diamond,Diamond,Mining,10000,0.00002,True,False,Very rare gemstone-used for boost and enchantments.,5000
+mining_copper_ore,Copper Ore,Mining,8,1.0,False,True,Smelted into copper.,8
+mining_iron_ore,Iron Ore,Mining,20,1.0,False,True,Smelted into iron.,20
+mining_silver_ore,Silver Ore,Mining,50,1.0,False,True,Smelted into silver.,40
+mining_gold_ore,Gold Ore,Mining,150,1.0,False,True,Smelted into gold.,100
+mining_titanium_ore,Titanium Ore,Mining,1500,1.0,False,True, The usable format of the titanium.,1000
+mining_oil,Oil,Mining,0.0,1.0,False,False,Black gold-used for many things.,0
+farming_moonberry_seed,Moonberry Seed,Farming,0.0,0.08,False,False, A seed which commonly can be found.,40
+farming_sungrain_seed,Sungrain Seed,Farming,0.0,0.04,False,False,A seed which ocassionally can be found.,80
+farming_fireleaf_seed,Fireleaf Seed,Farming,0.0,0.01,False,False,A seed which rarely can be found.,300
+farming_aquasprout_seed,Aquasproud Seed,Farming,0.0,0.005,False,False,A seed which very rarely can be found.,500
+farming_nightshade_seed,Nightshade Seed,Farming,0.0,0.001,False,False,A seed which almost never can be found.,1000
+farming_lunar_berries,Lunar Berries,Farming,0.0,1.0,False,True,Used for special things.,80
+farming_golden_sheaf,Golden Sheaf,Farming,0.0,1.0,False,True,Used for special things.,160
+farming_blazeboom,Blazeboom,Farming,0.0,1.0,False,True,Used for special things.,500
+farming_tidefruits,Tidefruits,Farming,0.0,1.0,False,True,Used for special things.,800
+farming_midnight_petals,Midnight Petals,Farming,,1.0,False,True,Used for special things.,1500
+woodcutting_oak_tree,Oak Tree,Woodcutting,0.0,0.01,False,False,A common tree-used for many things.,10
+woodcutting_pine_tree,Pine Tree,Woodcutting,0.0,0.005,False,False,A tree which grows in colder climates-used for many things.,40
+woodcutting_maple_tree,Maple Tree,Woodcutting,0.0,0.0005,False,False,A tree which grows in colder climates-used for many things.,150
+woodcutting_oak_logs,Oak Logs,Woodcutting,10,1.0,False,True,Used for many things.,0
+woodcutting_pine_logs,Pine Logs,Woodcutting,30,1.0,False,True,Used for many things.,0
+woodcutting_maple_logs,Maple Logs,Woodcutting,100,1.0,False,True,Used for many things.,0
+alchemy_enhanced_yield,Enhanced Yield Potion,Alchemy,0.0,1.0,False,True,Increases the harvested crops by 20%.,80
+alchemy_miners_brew,Miner's Brew,Alchemy,0.0,1.0,False,True,Boosts mining speed by 15% for a limited time.,250
+alchemy_lumberjacks_strength,Lumberjack's Strength Potion,Alchemy,0.0,1.0,False,True,Increases the amount of logs obtained per tree by 25%.,400
+alchemy_fishermans_elixir,Fisherman’s Elixir,Alchemy,0.0,1.0,False,True,Enhances the chance of catching rarer fish by 30%.,600
+alchemy_smelters_draught,Smelter's Draught,Alchemy,0.0,1.0,False,True,Increases the amount of metal obtained per ore by 20%.,800
+fishing_trout,Trout,Fishing,10,0.01,False,False,A common fish-used for many things.,10
+fishing_salmon,Salmon,Fishing,30,0.002,False,False,A fish which swims in colder waters-used for many things.,40
+fishing_tuna,Tuna,Fishing,100,0.0005,False,False,A fish which swims in warmer waters-used for many things.,200
