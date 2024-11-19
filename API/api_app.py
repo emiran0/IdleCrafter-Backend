@@ -144,6 +144,7 @@ async def get_user_tools(current_user: User = Depends(get_current_user)):
             tool_data = ToolData(
                 unique_tool_name=tool.UniqueName,
                 display_name=tool.Name,
+                ToolId=user_tool.ToolId,
                 isRepeating=tool.isRepeating,
                 isEnabled=user_tool.isEnabled,
                 isOccupied=user_tool.isOccupied,
@@ -219,19 +220,21 @@ async def quick_sell_item(
         raise HTTPException(status_code=500, detail=str(e))
 
 # PATCH endpoint to toggle tool enabled status    
-@app.patch("/user/tools/{tool_unique_name}/toggle", response_model=ToolToggleResponse, tags=["Tools"])
+@app.patch("/user/tools/{tool_unique_name}/{tool_id}/toggle", response_model=ToolToggleResponse, tags=["Tools"])
 async def toggle_tool_enabled(
     tool_unique_name: str = Path(..., description="Unique name of the tool"),
+    tool_id: int = Path(..., description="Multiple Tool ID"),
     current_user: User = Depends(get_current_user)
 ):
     try:
         # Call the database access function to toggle the tool's isEnabled status
-        user_tool = await toggle_user_tool_enabled(current_user.Id, tool_unique_name)
+        user_tool = await toggle_user_tool_enabled(current_user.Id, tool_unique_name, tool_id)
         
         # Prepare response
         response = ToolToggleResponse(
             tool_unique_name=tool_unique_name,
-            isEnabled=user_tool.isEnabled
+            isEnabled=user_tool.isEnabled,
+            tool_id=tool_id
         )
         return response
     except NoResultFound:

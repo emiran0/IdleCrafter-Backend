@@ -1,2 +1,2 @@
-ALTER TABLE items
-ADD COLUMN "XPYield" INTEGER NOT NULL DEFAULT 1;
+UPDATE user_tools SET "ToolId" = 2 Where "Id" IN (41);
+

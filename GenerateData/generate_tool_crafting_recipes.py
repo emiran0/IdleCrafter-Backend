@@ -26,7 +26,9 @@ def create_tool_crafting_recipe(data):
             InputQuantity=int(data['InputQuantity']),
             OutputToolUniqueName=data['OutputToolUniqueName'],
             OutputToolTier=int(data['OutputToolTier']),
-            GenerationDuration=float(data['GenerationDuration']) if data.get('GenerationDuration') else None
+            GenerationDuration=float(data['GenerationDuration']) if data.get('GenerationDuration') else None,
+            Category=data['Category'],
+            MinimumCategoryLevel=int(data['MinimumCategoryLevel'])
         )
 
         db.add(new_recipe)

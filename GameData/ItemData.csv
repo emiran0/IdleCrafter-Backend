@@ -26,9 +26,9 @@ farming_midnight_petals,Midnight Petals,Farming,,1.0,False,True,Used for special
 woodcutting_oak_tree,Oak Tree,Woodcutting,0.0,0.01,False,False,A common tree-used for many things.,10
 woodcutting_pine_tree,Pine Tree,Woodcutting,0.0,0.005,False,False,A tree which grows in colder climates-used for many things.,40
 woodcutting_maple_tree,Maple Tree,Woodcutting,0.0,0.0005,False,False,A tree which grows in colder climates-used for many things.,150
-woodcutting_oak_logs,Oak Logs,Woodcutting,10,1.0,False,True,Used for many things.,0
-woodcutting_pine_logs,Pine Logs,Woodcutting,30,1.0,False,True,Used for many things.,0
-woodcutting_maple_logs,Maple Logs,Woodcutting,100,1.0,False,True,Used for many things.,0
+woodcutting_oak_logs,Oak Logs,Woodcutting,10,1.0,False,True,Used for many things.,10
+woodcutting_pine_logs,Pine Logs,Woodcutting,30,1.0,False,True,Used for many things.,30
+woodcutting_maple_logs,Maple Logs,Woodcutting,100,1.0,False,True,Used for many things.,100
 alchemy_enhanced_yield,Enhanced Yield Potion,Alchemy,0.0,1.0,False,True,Increases the harvested crops by 20%.,80
 alchemy_miners_brew,Miner's Brew,Alchemy,0.0,1.0,False,True,Boosts mining speed by 15% for a limited time.,250
 alchemy_lumberjacks_strength,Lumberjack's Strength Potion,Alchemy,0.0,1.0,False,True,Increases the amount of logs obtained per tree by 25%.,400

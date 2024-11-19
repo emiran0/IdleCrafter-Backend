@@ -195,6 +195,8 @@ class ToolCraftingRecipe(Base):
     OutputToolUniqueName = Column(String, nullable=False)
     OutputToolTier = Column(Integer, nullable=False)
     GenerationDuration = Column(Float, default=1.0)
+    Category= Column(String, nullable=True)
+    MinimumCategoryLevel = Column(Integer, nullable=True)
 
     __table_args__ = (
         ForeignKeyConstraint(
@@ -232,6 +234,7 @@ class UserTool(Base):
     UserId = Column(pgUUID(as_uuid=True), ForeignKey('users.Id'), nullable=False)
     Username = Column(String, nullable=False)
     ToolUniqueName = Column(String, nullable=False)
+    ToolId = Column(Integer, nullable=False)
     Tier = Column(Integer, nullable=False)
     AcquiredAt = Column(DateTime, default=datetime.now(), nullable=True)
     isEnabled = Column(Boolean, default=True, nullable=True)
@@ -325,6 +328,7 @@ class UserCategoryXP(Base):
     Username = Column(String, nullable=False)
     Category = Column(String, nullable=False)
     CurrentXP = Column(Integer, nullable=False)
+    CategoryLevel = Column(Integer, nullable=False)
     LastUpdated = Column(DateTime, default=datetime.now(), nullable=False)
 
     # Relationships

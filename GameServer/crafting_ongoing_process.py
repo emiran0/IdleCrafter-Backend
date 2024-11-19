@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from Database.models import (
-    User, UserItem, UserTool, Tool, Item, CraftingRecipe
+    User, UserItem, UserTool, Tool, Item, CraftingRecipe, UserCategoryXP, CategoryLevels
 )
 from Database.database import AsyncSessionLocal
 
@@ -16,7 +16,8 @@ async def crafting_ongoing_process():
             # Step 1: Fetch all occupied UserTools
             ongoing_tools_query = select(UserTool).options(
                 selectinload(UserTool.user),
-                selectinload(UserTool.tool)
+                selectinload(UserTool.tool),
+                selectinload(UserTool.ongoing_crafting_item)
             ).filter(
                 UserTool.isOccupied == True
             )
@@ -25,9 +26,26 @@ async def crafting_ongoing_process():
 
             current_time = datetime.now()
 
+            # Pre-fetch all CategoryLevels and organize them by category
+            category_levels_query = select(CategoryLevels)
+            category_levels_result = await session.execute(category_levels_query)
+            all_category_levels = category_levels_result.scalars().all()
+
+            # Organize CategoryLevels by category
+            category_levels_dict = {}
+            for level in all_category_levels:
+                if level.Category not in category_levels_dict:
+                    category_levels_dict[level.Category] = []
+                category_levels_dict[level.Category].append(level)
+
+            # Sort levels for each category
+            for levels in category_levels_dict.values():
+                levels.sort(key=lambda l: l.Level)
+
             for user_tool in ongoing_tools:
                 user = user_tool.user
                 tool = user_tool.tool
+                item = user_tool.ongoing_crafting_item  # The item being crafted
                 crafting_item_name = user_tool.OngoingCraftingItemUniqueName
                 remaining_quantity = user_tool.OngoingRemainedQuantity
                 last_used = user_tool.LastUsed
@@ -79,6 +97,7 @@ async def crafting_ongoing_process():
                             Quantity=crafted_quantity * output_multiplier
                         )
                         session.add(user_item)
+
                     # Step 4: Update UserTool
                     user_tool.OngoingRemainedQuantity -= crafted_quantity
 
@@ -97,6 +116,55 @@ async def crafting_ongoing_process():
                     # Add updates to the session
                     session.add(user_item)
                     session.add(user_tool)
+
+                    # --- XP Yielding Functionality ---
+                    xp_yield = item.XPYield or 0
+                    xp_to_add = crafted_quantity * output_multiplier * xp_yield
+
+                    category = item.Category
+
+                    # Fetch or create UserCategoryXP entry for the user and category
+                    user_category_xp_query = select(UserCategoryXP).filter(
+                        UserCategoryXP.UserId == user.Id,
+                        UserCategoryXP.Category == category
+                    )
+                    user_category_xp_result = await session.execute(user_category_xp_query)
+                    user_category_xp = user_category_xp_result.scalar_one_or_none()
+
+                    if not user_category_xp:
+                        # Create new UserCategoryXP
+                        user_category_xp = UserCategoryXP(
+                            UserId=user.Id,
+                            Username=user.Username,
+                            Category=category,
+                            CurrentXP=0,
+                            CategoryLevel=1,
+                            LastUpdated=datetime.now()
+                        )
+                        session.add(user_category_xp)
+
+                    # Update CurrentXP
+                    user_category_xp.CurrentXP += xp_to_add
+                    user_category_xp.LastUpdated = datetime.now()
+
+                    # Check for level-up
+                    category_levels = category_levels_dict.get(category, [])
+
+                    # Determine new level based on CurrentXP
+                    new_level = user_category_xp.CategoryLevel
+                    for level in category_levels:
+                        if user_category_xp.CurrentXP >= level.StartingXp:
+                            new_level = level.Level
+                        else:
+                            break
+
+                    if new_level > user_category_xp.CategoryLevel:
+                        user_category_xp.CategoryLevel = new_level
+                        print(f"User '{user.Username}' leveled up in category '{category}' to level {new_level}.")
+
+                    # Add user_category_xp to session
+                    session.add(user_category_xp)
+                    # --- End of XP Yielding Functionality ---
 
             # Commit all changes
             await session.commit()

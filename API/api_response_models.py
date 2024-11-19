@@ -86,6 +86,8 @@ class ToolData(BaseModel):
     :type unique_tool_name: str
     :param display_name: Display name of the tool
     :type display_name: str
+    :param ToolId: ID of the tool
+    :type ToolId: int
     :param isRepeating: If the tool is repeating
     :type isRepeating: Optional[bool]
     :param isEnabled: If the tool is enabled
@@ -104,6 +106,7 @@ class ToolData(BaseModel):
 
     unique_tool_name: str
     display_name: str
+    ToolId: int
     isRepeating: Optional[bool]
     isEnabled: Optional[bool]
     isOccupied: Optional[bool]
@@ -205,12 +208,18 @@ class CraftableTool(BaseModel):
     :type display_name: str
     :param required_items: List of required items for crafting the tool
     :type required_items: List[RequiredItem]
+    :param category: Category of the tool
+    :type category: str
+    :param minimum_category_level: Minimum category level to craft the tool
+    :type minimum_category_level: int
     """
 
     unique_tool_name: str
     display_name: str
     tier: int
     required_items: List[RequiredItem]
+    category: str
+    minimum_category_level: int
 
 class InputItem(BaseModel):
     """

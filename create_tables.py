@@ -10,7 +10,7 @@ def create_tables():
     print("Tables created successfully.")
 
 def create_specific_table():
-    UserCategoryXP.__table__.create(bind=engine)
+    ToolCraftingRecipe.__table__.create(bind=engine)
     print("Table created successfully.")
 
 if __name__ == "__main__":

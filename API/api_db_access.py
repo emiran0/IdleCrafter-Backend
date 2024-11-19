@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 import uuid
 from Database.database import AsyncSessionLocal
 from Database.models import (
-    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory, ChatHistory
+    User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory, ChatHistory, UserCategoryXP, CategoryLevels
 )
 from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing, TransactionHistoryResponse
 from collections import Counter
@@ -52,7 +52,7 @@ async def get_user_by_username(username):
     return user
 
 # Function to toggle the isEnabled status of a user's tool
-async def toggle_user_tool_enabled(user_id: str, tool_unique_name: str) -> UserTool:
+async def toggle_user_tool_enabled(user_id: str, tool_unique_name: str, tool_id: int) -> UserTool:
     async with AsyncSessionLocal() as session:
         try:
             # Fetch the UserTool for the user and tool_unique_name
@@ -60,22 +60,21 @@ async def toggle_user_tool_enabled(user_id: str, tool_unique_name: str) -> UserT
                 select(UserTool)
                 .filter(
                     UserTool.UserId == user_id,
-                    UserTool.ToolUniqueName == tool_unique_name
+                    UserTool.ToolUniqueName == tool_unique_name,
+                    UserTool.ToolId == tool_id
                 )
             )
             user_tool = result.scalar_one_or_none()
             
             if not user_tool:
                 raise NoResultFound("Tool not found for user")
-            
-            # Toggle the isEnabled field
+
+            # Toggle the isEnabled status
             user_tool.isEnabled = not user_tool.isEnabled
-            
-            # Save changes
             await session.commit()
             await session.refresh(user_tool)
-            
             return user_tool
+        
         except Exception as e:
             await session.rollback()
             raise e  # Re-raise exception to be handled by calling function
@@ -91,6 +90,15 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
             user = user_result.scalar_one_or_none()
             if not user:
                 raise Exception(f"User '{user_identifier}' not found.")
+
+            # Fetch user's category levels
+            user_category_levels_query = select(UserCategoryXP).where(
+                UserCategoryXP.UserId == user.Id
+            )
+            user_category_levels_result = await session.execute(user_category_levels_query)
+            user_category_levels = user_category_levels_result.scalars().all()
+            # Create a dictionary for quick access
+            user_category_levels_dict = {userXp.Category: userXp.CategoryLevel for userXp in user_category_levels}
 
             # Build a mapping from (ToolUniqueName, Tier) to count
             tool_counter = Counter((user_tool.ToolUniqueName, user_tool.Tier) for user_tool in user.tools)
@@ -129,6 +137,23 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
                     tool = tier_to_tool.get(tier)
                     if not tool:
                         continue  # Tool not found, skip
+
+                    # Fetch the crafting recipe for this tool and tier
+                    recipe_query = select(ToolCraftingRecipe).where(
+                        ToolCraftingRecipe.OutputToolUniqueName == tool_unique_name,
+                        ToolCraftingRecipe.OutputToolTier == tier
+                    )
+                    recipe_result = await session.execute(recipe_query)
+                    recipe = recipe_result.scalars().all()
+                    if not recipe:
+                        continue  # Recipe not found, skip
+
+                    # Check user's category level
+                    category = recipe[0].Category
+                    minimum_level_required = recipe[0].MinimumCategoryLevel
+                    user_category_level = user_category_levels_dict.get(category, 0)
+                    if user_category_level + 1 < minimum_level_required:
+                        continue  # User doesn't meet level requirement
 
                     is_multiple_craftable = tool.isMultipleCraftable
                     max_crafting_number = tool.maxCraftingNumber
@@ -178,22 +203,25 @@ async def get_available_tool_crafting_recipes(user_identifier: str) -> List[Craf
                         required_quantity=recipe.InputQuantity
                     ))
 
-                # Create the CraftableTool object including the tier
+                # Create the CraftableTool object including the tier and minimum level required
                 response.append(CraftableTool(
                     unique_tool_name=tool_unique_name,
                     display_name=tool.Name,
                     tier=next_tier,
-                    required_items=required_items_list
+                    required_items=required_items_list,
+                    category=category,
+                    minimum_category_level=minimum_level_required
                 ))
 
-            # Sort the response by tier in ascending order
-            response.sort(key=lambda x: x.tier)
+            # Sort the response by tier and then by minimum_level_required in ascending order
+            response.sort(key=lambda x: (x.tier, x.minimum_category_level))
 
             return response
 
         except Exception as e:
             print(f"Error fetching tool crafting recipes: {e}")
             raise
+
 
 # Function to get item crafting recipes
 async def get_item_crafting_recipes() -> List[ToolRecipes]:

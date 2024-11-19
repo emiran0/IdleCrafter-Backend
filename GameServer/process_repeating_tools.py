@@ -1,43 +1,41 @@
 # process_repeating_tools.py
 
-import time
 from Database.database import SessionLocal
-from Database.models import UserTool, Tool, ToolGeneratableItem, Item, UserItem, User
+from Database.models import (
+    UserTool, Tool, ToolGeneratableItem, Item, UserItem, User,
+    UserCategoryXP, CategoryLevels
+)
 from sqlalchemy.orm import joinedload
+from datetime import datetime
 import random
 
 def process_repeating_tools():
+    xp_multiplier = 1  # For future development, can be modified or made dynamic
     db = SessionLocal()
     try:
+        # Fetch all user tools that are repeating and enabled
         user_tools = db.query(UserTool).join(Tool).options(
-            # Update the relationship to 'generated_item'
             joinedload(UserTool.tool).joinedload(Tool.generatable_items).joinedload(ToolGeneratableItem.generated_item),
-            # Ensure user and user's items are loaded
             joinedload(UserTool.user).joinedload(User.items),
-            # Remove redundant joinedload(UserTool.tool)
+            joinedload(UserTool.user).joinedload(User.category_xp)
         ).filter(
             Tool.isRepeating == True,
             UserTool.isEnabled == True
         ).all()
 
-        # Get the total number of unique users
-        unique_users = {user_tool.user.Id for user_tool in user_tools}
-        total_users = len(unique_users)
-
-        print(f"Processing {len(user_tools)} repeating tools for {total_users} unique users.")
-        
+        # Process each user tool
         for user_tool in user_tools:
             user = user_tool.user
             tool = user_tool.tool
 
-            # Get the user's item quantities
+            # Create dictionaries for quick access
             user_items_dict = {ui.UniqueName: ui for ui in user.items}
+            user_category_xp_dict = {user_exp.Category: user_exp for user_exp in user.category_xp}
 
-            # Check for storage capacity
             storage_capacity = tool.StorageCapacity
 
             for gen_item_assoc in tool.generatable_items:
-                item = gen_item_assoc.generated_item  # Updated attribute access
+                item = gen_item_assoc.generated_item
                 output_item_quantity = gen_item_assoc.OutputItemQuantity or 1
 
                 # Resource requirement (if any)
@@ -66,7 +64,7 @@ def process_repeating_tools():
                         print(f"Storage capacity reached for '{item.Name}' for user '{user.Username}'.")
                         continue  # Skip adding item
 
-                    # Calculate how many items can be added without exceeding storage capacity
+                    # Calculate quantity to add without exceeding storage capacity
                     max_addable_quantity = storage_capacity - current_quantity if storage_capacity is not None else output_item_quantity
                     quantity_to_add = min(output_item_quantity, max_addable_quantity)
 
@@ -81,6 +79,51 @@ def process_repeating_tools():
                         )
                         db.add(user_item)
                         user_items_dict[item.UniqueName] = user_item  # Update the dict
+
+                    # --- XP Yielding Functionality ---
+                    xp_yield = item.XPYield or 0
+                    xp_to_add = xp_yield * xp_multiplier
+
+                    category = item.Category
+                    user_category_xp = user_category_xp_dict.get(category)
+
+                    if not user_category_xp:
+                        # Create new UserCategoryXP entry
+                        user_category_xp = UserCategoryXP(
+                            UserId=user.Id,
+                            Username=user.Username,
+                            Category=category,
+                            CurrentXP=0,
+                            CategoryLevel=1, 
+                            LastUpdated=datetime.now()
+                        )
+                        db.add(user_category_xp)
+                        user_category_xp_dict[category] = user_category_xp  # Update the dict
+
+                    # Update XP and LastUpdated
+                    user_category_xp.CurrentXP += xp_to_add
+                    user_category_xp.LastUpdated = datetime.now()
+
+                    # Check for level upgrade
+                    # Fetch CategoryLevels for the category, ordered by Level
+                    category_levels = db.query(CategoryLevels).filter_by(
+                        Category=category
+                    ).order_by(CategoryLevels.Level.asc()).all()
+
+                    # Determine new level based on CurrentXP
+                    new_level = user_category_xp.CategoryLevel
+                    for level in category_levels:
+                        if user_category_xp.CurrentXP >= level.StartingXp:
+                            new_level = level.Level
+                        else:
+                            break
+
+                    if new_level > user_category_xp.CategoryLevel:
+                        user_category_xp.CategoryLevel = new_level
+                        print(f"User '{user.Username}' leveled up in category '{category}' to level {new_level}.")
+
+                    db.add(user_category_xp)
+                    # --- End of XP Yielding Functionality ---
 
             db.commit()
     except Exception as e:

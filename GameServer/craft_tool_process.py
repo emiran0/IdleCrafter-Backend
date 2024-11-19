@@ -5,9 +5,9 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, func
 from Database.models import (
-    User, UserItem, UserTool, Tool, Item, ToolCraftingRecipe
+    User, UserItem, UserTool, Tool, Item, ToolCraftingRecipe, UserCategoryXP, CategoryLevels
 )
 from Database.database import AsyncSessionLocal
 import uuid
@@ -25,7 +25,8 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
             # Step 1: Retrieve the user
             user_query = select(User).options(
                 selectinload(User.items),
-                selectinload(User.tools).selectinload(UserTool.tool)
+                selectinload(User.tools).selectinload(UserTool.tool),
+                selectinload(User.category_xp)  # Load user's category XP
             )
             try:
                 # Try to parse user_identifier as UUID
@@ -65,6 +66,24 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
             if not recipes:
                 print(f"No crafting recipe found for tool '{output_tool_unique_name}' with Tier {tier}.")
                 raise HTTPException(status_code=404, detail="Crafting recipe not found.")
+
+            # --- Start of Level Check Addition ---
+            # Assume all recipes for this tool and tier have the same Category and MinimumCategoryLevel
+            recipe = recipes[0]
+            required_category = recipe.Category
+            minimum_level_required = recipe.MinimumCategoryLevel
+
+            # Fetch user's level in the required category
+            user_category_xp = next((userCatLevel for userCatLevel in user.category_xp if userCatLevel.Category == required_category), None)
+            user_category_level = user_category_xp.CategoryLevel if user_category_xp else 0
+
+            if user_category_level < minimum_level_required:
+                print(f"User does not meet the minimum level requirement for category '{required_category}'.")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Minimum level {minimum_level_required} required in category '{required_category}'. Your level: {user_category_level}."
+                )
+            # --- End of Level Check Addition ---
 
             # Step 4: Check if the user has enough input items
             user_items_dict = {ui.UniqueName: ui for ui in user.items}
@@ -118,6 +137,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
                         UserId=user.Id,
                         Username=user.Username,
                         ToolUniqueName=output_tool_unique_name,
+                        ToolId=1,
                         Tier=tier,
                         AcquiredAt=datetime.now(),
                         isEnabled=True
@@ -133,11 +153,16 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
                     print(f"User already has maximum number ({tool.maxCraftingNumber}) of '{output_tool_unique_name}'.")
                     raise HTTPException(status_code=400, detail=f"Cannot craft more than {tool.maxCraftingNumber} instances of '{output_tool_unique_name}'.")
                 else:
+                    # Determine next ToolId
+                    existing_multiple_ids = [ut.ToolId for ut in user_tools_of_type]
+                    next_multiple_tool_id = max(existing_multiple_ids, default=0) + 1
+
                     # Create new UserTool
                     new_user_tool = UserTool(
                         UserId=user.Id,
                         Username=user.Username,
                         ToolUniqueName=output_tool_unique_name,
+                        ToolId=next_multiple_tool_id,
                         Tier=tier,
                         AcquiredAt=datetime.now(),
                         isEnabled=True
