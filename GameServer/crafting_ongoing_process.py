@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy import select
+from sqlalchemy import select, func
 from Database.models import (
     User, UserItem, UserTool, Tool, Item, CraftingRecipe, UserCategoryXP, CategoryLevels
 )
@@ -123,13 +123,16 @@ async def crafting_ongoing_process():
 
                     category = item.Category
 
-                    # Fetch or create UserCategoryXP entry for the user and category
+                    # Fetch all UserCategoryXP entries for the user
                     user_category_xp_query = select(UserCategoryXP).filter(
-                        UserCategoryXP.UserId == user.Id,
-                        UserCategoryXP.Category == category
+                        UserCategoryXP.UserId == user.Id
                     )
                     user_category_xp_result = await session.execute(user_category_xp_query)
-                    user_category_xp = user_category_xp_result.scalar_one_or_none()
+                    user_category_xp_list = user_category_xp_result.scalars().all()
+                    user_category_xp_dict = {ucxp.Category: ucxp for ucxp in user_category_xp_list}
+
+                    # Fetch or create UserCategoryXP entry for the user and category
+                    user_category_xp = user_category_xp_dict.get(category)
 
                     if not user_category_xp:
                         # Create new UserCategoryXP
@@ -142,6 +145,7 @@ async def crafting_ongoing_process():
                             LastUpdated=datetime.now()
                         )
                         session.add(user_category_xp)
+                        user_category_xp_dict[category] = user_category_xp  # Update the dict
 
                     # Update CurrentXP
                     user_category_xp.CurrentXP += xp_to_add
@@ -158,12 +162,29 @@ async def crafting_ongoing_process():
                         else:
                             break
 
+                    level_up_occurred = False
                     if new_level > user_category_xp.CategoryLevel:
                         user_category_xp.CategoryLevel = new_level
                         print(f"User '{user.Username}' leveled up in category '{category}' to level {new_level}.")
+                        level_up_occurred = True
 
                     # Add user_category_xp to session
                     session.add(user_category_xp)
+
+                    # --- Update TotalLevel if Level-Up Occurred ---
+                    if level_up_occurred:
+                        # Directly query the database to sum up all category levels for the user
+                        total_category_levels_result = await session.execute(
+                            select(func.sum(UserCategoryXP.CategoryLevel)).filter(
+                                UserCategoryXP.UserId == user.Id
+                            )
+                        )
+                        total_category_levels = total_category_levels_result.scalar() or 0
+
+                        # Update the user's TotalLevel
+                        user.TotalLevel = total_category_levels
+                        session.add(user)
+                    # --- End of TotalLevel Update ---
                     # --- End of XP Yielding Functionality ---
 
             # Commit all changes

@@ -122,6 +122,9 @@ def process_repeating_tools():
                         user_category_xp.CategoryLevel = new_level
                         print(f"User '{user.Username}' leveled up in category '{category}' to level {new_level}.")
 
+                        update_total_level_on_category_level_up(user, user_category_xp_dict)
+                        db.add(user)  # Ensure user is added to the session
+
                     db.add(user_category_xp)
                     # --- End of XP Yielding Functionality ---
 
@@ -131,6 +134,22 @@ def process_repeating_tools():
         print(f"Error processing repeating tools: {e}")
     finally:
         db.close()
+
+def update_total_level_on_category_level_up(user, user_category_xp_dict):
+    """
+    Updates the user's TotalLevel when a category level increases.
+
+    :param user: The User object whose TotalLevel needs to be updated.
+    :param user_category_xp_dict: Dictionary of user's category XP entries before level-up.
+    """
+    # Sum all category levels before the level-up
+    total_category_levels_before = sum(ucxp.CategoryLevel for ucxp in user_category_xp_dict.values())
+    
+    # Since one category level is increasing, total category levels will increase by 1
+    total_category_levels_after = total_category_levels_before + 1
+    
+    # Increase TotalLevel by 1 on top of the total of all categories
+    user.TotalLevel = total_category_levels_after + 1
 
 # def run_repeating_tools():
 #     while True:

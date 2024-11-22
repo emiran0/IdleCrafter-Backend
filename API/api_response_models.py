@@ -40,6 +40,7 @@ class UserResponse(BaseModel):
     Email: str
     Gold: float
     Energy: float
+    TotalLevel: int
 
     class Config:
         from_attributes = True

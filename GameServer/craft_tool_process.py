@@ -71,17 +71,17 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
             # Assume all recipes for this tool and tier have the same Category and MinimumCategoryLevel
             recipe = recipes[0]
             required_category = recipe.Category
-            minimum_level_required = recipe.MinimumCategoryLevel
+            minimum_category_level = recipe.MinimumCategoryLevel or 0
 
             # Fetch user's level in the required category
-            user_category_xp = next((userCatLevel for userCatLevel in user.category_xp if userCatLevel.Category == required_category), None)
+            user_category_xp = next((UserCategoryXP for UserCategoryXP in user.category_xp if UserCategoryXP.Category == required_category), None)
             user_category_level = user_category_xp.CategoryLevel if user_category_xp else 0
 
-            if user_category_level < minimum_level_required:
-                print(f"User does not meet the minimum level requirement for category '{required_category}'.")
+            if user_category_level < minimum_category_level:
+                print(f"User does not meet the minimum category level requirement for category '{required_category}'.")
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Minimum level {minimum_level_required} required in category '{required_category}'. Your level: {user_category_level}."
+                    detail=f"Minimum level {minimum_category_level} required in category '{required_category}'. Your level: {user_category_level}."
                 )
             # --- End of Level Check Addition ---
 
@@ -153,7 +153,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
                     print(f"User already has maximum number ({tool.maxCraftingNumber}) of '{output_tool_unique_name}'.")
                     raise HTTPException(status_code=400, detail=f"Cannot craft more than {tool.maxCraftingNumber} instances of '{output_tool_unique_name}'.")
                 else:
-                    # Determine next ToolId
+                    # Determine next MultipleToolId
                     existing_multiple_ids = [ut.ToolId for ut in user_tools_of_type]
                     next_multiple_tool_id = max(existing_multiple_ids, default=0) + 1
 
@@ -164,7 +164,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
                         ToolUniqueName=output_tool_unique_name,
                         ToolId=next_multiple_tool_id,
                         Tier=tier,
-                        AcquiredAt=datetime.now(),
+                        AcquiredAt=datetime.utcnow(),
                         isEnabled=True
                     )
                     session.add(new_user_tool)
