@@ -11,7 +11,7 @@ from Database.database import AsyncSessionLocal
 from Database.models import (
     User, UserTool, Tool, UserItem, Item, ToolCraftingRecipe, CraftingRecipe, Market, MarketHistory, ChatHistory, UserCategoryXP, CategoryLevels
 )
-from .api_response_models import CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing, TransactionHistoryResponse
+from .api_response_models import CategoryProgress, CraftableTool, RequiredItem, ToolRecipes, Recipe, InputItem, MarketListing, TransactionHistoryResponse
 from collections import Counter
 
 
@@ -626,3 +626,90 @@ async def save_chat_message(user_id: uuid.UUID, username: str, message_text: str
         await session.commit()
         await session.refresh(chat_message)
         return chat_message
+    
+# Function to fetch user category level and XP progress.
+async def fetch_user_category_xp(user_identifier: str) -> List[CategoryProgress]:
+    async with AsyncSessionLocal() as session:
+        try:
+            # Try to parse user_identifier as UUID
+            try:
+                user_uuid = user_identifier
+                user_query = select(User).filter(User.Id == user_uuid)
+            except ValueError:
+                # If not UUID, treat as Username
+                user_query = select(User).filter(User.Username == user_identifier)
+
+            user_result = await session.execute(
+                user_query.options(
+                    selectinload(User.category_xp)
+                )
+            )
+            user = user_result.scalars().one_or_none()
+
+            if not user:
+                raise Exception("User not found.")
+
+            # Fetch UserCategoryXP entries for the user
+            user_category_xp_list = user.category_xp  # Already loaded via selectinload
+
+            if not user_category_xp_list:
+                # User has no category XP entries
+                return []
+
+            categories_progress = []
+
+            for ucxp in user_category_xp_list:
+                category = ucxp.Category
+                current_xp = ucxp.CurrentXP
+                category_level = ucxp.CategoryLevel
+
+                # Fetch CategoryLevels for the category
+                category_levels_result = await session.execute(
+                    select(CategoryLevels)
+                    .filter(CategoryLevels.Category == category)
+                    .order_by(CategoryLevels.Level.asc())
+                )
+                category_levels = category_levels_result.scalars().all()
+
+                # Find current and next level starting XP
+                current_level_xp = None
+                next_level_xp = None
+
+                for idx, cl in enumerate(category_levels):
+                    if cl.Level == category_level:
+                        current_level_xp = cl.StartingXp
+                        if idx + 1 < len(category_levels):
+                            next_level_xp = category_levels[idx + 1].StartingXp
+                        else:
+                            next_level_xp = None  # Max level reached
+                        break
+
+                if current_level_xp is None:
+                    current_level_xp = 1 # Default to 1 if not found
+
+                if next_level_xp is None:
+                    next_level_xp = current_level_xp  # Max level
+
+                xp_needed = next_level_xp - current_level_xp
+                xp_progress = current_xp - current_level_xp
+
+                if xp_needed > 0:
+                    progress_percentage = (xp_progress / xp_needed) * 100
+                else:
+                    progress_percentage = 100.0  # Max level
+
+                category_progress = CategoryProgress(
+                    Category=category,
+                    CurrentXP=current_xp,
+                    CategoryLevel=category_level,
+                    NextLevelXP=next_level_xp if next_level_xp != current_level_xp else None,
+                    LevelProgressPercentage=round(progress_percentage, 2)
+                )
+
+                categories_progress.append(category_progress)
+
+            return categories_progress
+
+        except Exception as e:
+            await session.rollback()
+            raise e

@@ -448,3 +448,35 @@ class TransactionHistoryResponse(BaseModel):
     """
 
     transactions: List[TransactionHistoryItem]
+
+class CategoryProgress(BaseModel):
+    """
+    Model for category progress and XP.
+
+    :param Category: Category name
+    :type Category: str
+    :param CurrentXP: Current XP of the category
+    :type CurrentXP: int
+    :param CategoryLevel: Level of the category
+    :type CategoryLevel: int
+    :param NextLevelXP: XP required to reach next level
+    :type NextLevelXP: Optional[int]
+    :param LevelProgressPercentage: Level progress percentage
+    :type LevelProgressPercentage: float
+    """
+    
+    Category: str
+    CurrentXP: int
+    CategoryLevel: int
+    NextLevelXP: Optional[int]
+    LevelProgressPercentage: float
+
+class UserCategoryXPResponse(BaseModel):
+    """
+    Response model for user's category XP.
+
+    :param Categories: List of category progress and XP
+    :type Categories: List[CategoryProgress
+    """
+
+    Categories: List[CategoryProgress]

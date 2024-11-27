@@ -75,7 +75,7 @@ async def craft_tool(user_identifier: str, output_tool_unique_name: str, tier: i
 
             # Fetch user's level in the required category
             user_category_xp = next((UserCategoryXP for UserCategoryXP in user.category_xp if UserCategoryXP.Category == required_category), None)
-            user_category_level = user_category_xp.CategoryLevel if user_category_xp else 0
+            user_category_level = user_category_xp.CategoryLevel if user_category_xp else 1
 
             if user_category_level < minimum_category_level:
                 print(f"User does not meet the minimum category level requirement for category '{required_category}'.")

@@ -17,13 +17,15 @@ from .api_response_models import (
     ToolToggleResponse, CraftableTool, RequiredItem, ToolRecipes,
     MarketListingsResponse, ListItemRequest, ListItemResponse,
     BuyItemRequest, BuyItemResponse, CancelListingResponse, CancelListingRequest,
-    ItemQuickSellRequest, TransactionHistoryResponse, TransactionHistoryItem
+    ItemQuickSellRequest, TransactionHistoryResponse, TransactionHistoryItem, UserCategoryXPResponse,
+    CategoryProgress
+
 )
 from .api_db_access import (
     fetch_user_tools, fetch_user_items, get_user_by_username, toggle_user_tool_enabled,
     get_available_tool_crafting_recipes, get_item_crafting_recipes, fetch_market_listings, 
     create_market_listing, buy_market_item, cancel_market_listing, fetch_user_market_listings,
-    quick_sell_user_item, get_transaction_history, save_chat_message
+    quick_sell_user_item, get_transaction_history, save_chat_message, fetch_user_category_xp
 )
 from GenerateData.create_users import create_user, UserAlreadyExistsError
 from GameServer.process_repeating_tools import process_repeating_tools
@@ -428,6 +430,17 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+@app.get("/category/xp", response_model=UserCategoryXPResponse, tags=["Category"])
+async def get_user_category_xp(current_user: User = Depends(get_current_user)):
+    try:
+        categories_progress = await fetch_user_category_xp(current_user.Id)
+        if categories_progress is None:
+            raise HTTPException(status_code=404, detail="User not found.")
+        elif not categories_progress:
+            raise HTTPException(status_code=404, detail="No category XP entries found for user.")
+        return UserCategoryXPResponse(Categories=categories_progress)
+    except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
