@@ -46,7 +46,7 @@ async def create_user(user_data):
             await session.flush()  # Ensure new_user.Id is available
 
             # Assign initial tool
-            initial_tools = ['player_ultimate', 'farming_field', 'farming_field', 'farming_field']
+            initial_tools = ['player_ultimate']
 
             for tool_unique_name in initial_tools:
                 result = await session.execute(
@@ -61,7 +61,9 @@ async def create_user(user_data):
                     UserId=new_user.Id,
                     Username=new_user.Username,
                     ToolUniqueName=tool.UniqueName,
-                    Tier=1
+                    ToolId=1,
+                    Tier=1,
+
                 )
                 session.add(user_tool)
                 print(f"Assigned tool '{tool.Name}' to user '{new_user.Username}'.")

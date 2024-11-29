@@ -107,7 +107,7 @@ class ToolData(BaseModel):
 
     unique_tool_name: str
     display_name: str
-    ToolId: int
+    ToolId: Optional[int]
     isRepeating: Optional[bool]
     isEnabled: Optional[bool]
     isOccupied: Optional[bool]
